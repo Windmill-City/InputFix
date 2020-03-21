@@ -24,12 +24,18 @@
     <ClInclude Include="TSF.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="TSF.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Context.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
