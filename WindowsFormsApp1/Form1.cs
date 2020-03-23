@@ -6,11 +6,6 @@ namespace WindowsFormsApp1
     public partial class Form1 : Form
     {
         int last = DateTime.Now.Millisecond;
-        public Form1()
-        {
-            InitializeComponent();
-            Application.Idle += Application_Idle;
-        }
 
         private void Application_Idle(object sender, System.EventArgs e)
         {
@@ -32,6 +27,8 @@ namespace WindowsFormsApp1
             this.Move += Form1_Move;
 
             InitializeComponent();
+
+            Application.Idle += Application_Idle;
         }
 
         protected override void WndProc(ref Message m)
