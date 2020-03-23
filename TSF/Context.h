@@ -2,6 +2,7 @@
 
 #include <msctf.h>
 #include <olectl.h>
+#include <thread>
 
 /**************************************************************************
 
@@ -13,8 +14,8 @@ struct TfContextOwner : ITfContextOwner
 private:
     DWORD                   m_ObjRefCount;
     HWND                    hwnd;
-    RECT                   TextExt;
-    RECT                   ScreenExt;
+    RECT                    TextExt;
+    RECT                    ScreenExt;
 public:
     TfContextOwner(HWND hwnd);
     void SetTextExt(int left, int right, int top, int bottom);
@@ -39,17 +40,17 @@ public:
 **************************************************************************/
 struct TfContextOwnerCompositionSink : ITfContextOwnerCompositionSink
 {
-    typedef void(__stdcall* StartCompositionCallBack)(ITfCompositionView* pComposition, BOOL* pfOk);
-    typedef void(__stdcall* UpdateCompositionCallBack)(ITfCompositionView* pComposition, ITfRange* pRangeNew);
-    typedef void(__stdcall* EndCompositionCallBack)(ITfCompositionView* pComposition);
 private:
     DWORD                        m_ObjRefCount;
-    StartCompositionCallBack     StartComposition;
-    UpdateCompositionCallBack    UpdateComposition;
-    EndCompositionCallBack       EndComposition;
+    HWND                         hwnd;
+    BOOL                         enable;
+    TfEditCookie                 cookie;
+    BOOL                         shouldExit;
+    std::thread                  msg_loop;
 public:
-    TfContextOwnerCompositionSink();
-    TfContextOwnerCompositionSink(StartCompositionCallBack start, UpdateCompositionCallBack update, EndCompositionCallBack end);
+    TfContextOwnerCompositionSink(HWND _hwnd);
+    ~TfContextOwnerCompositionSink();
+    void SetEnable(BOOL _enable);
     //IUnKnown
     virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
     virtual ULONG __stdcall AddRef(void) override;

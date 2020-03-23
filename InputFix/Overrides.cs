@@ -1,4 +1,5 @@
-﻿using StardewValley.Menus;
+﻿using StardewValley;
+using StardewValley.Menus;
 using System;
 using System.Runtime.InteropServices;
 
@@ -24,12 +25,14 @@ namespace InputFix
         delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         private const int WM_IME_COMPOSITION = 271;
+        private const int WM_IME_STARTCOMPOSITION = 269;
         private const int WM_INPUTLANGCHANGE = 81;
         private const int WM_IME_SETCONTEXT = 0x0281;
         private const int WM_SETFOCUS = 0x0007;
 
         public static bool KeyboardInput_HookProc(ref IntPtr __result, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr ___prevWndProc, ref IntPtr ___hIMC)
         {
+            ModEntry.monitor.Log("MSG:"+msg,StardewModdingAPI.LogLevel.Debug);
             if (___hIMC != (IntPtr)0)
             {
                 ImmReleaseContext(___prevWndProc, ___hIMC);
@@ -40,8 +43,11 @@ namespace InputFix
                 case WM_SETFOCUS:
                     //ModEntry.tsf.SetFocus();
                     break;
+                case WM_IME_STARTCOMPOSITION:
+                    __result = (IntPtr)1;
+                    goto Handled;
                 case WM_IME_COMPOSITION:
-                    __result = (IntPtr)0;
+                    __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_SETCONTEXT:
                     __result = (IntPtr)1;
@@ -57,15 +63,16 @@ namespace InputFix
 
         public static void TextBox_Selected(TextBox __instance, string ____text, bool ____selected)
         {
-            ModEntry.textbox_h.enableInput(____selected);
-            if (____selected)
+            if(Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber == __instance && ____selected)
             {
+                ModEntry.textbox_h.enableInput(true);
                 var text = __instance.Font.MeasureString(____text);
                 var _char = __instance.Font.MeasureString("字");
                 int X = __instance.X + (int)text.X;
                 int Y = __instance.Y + (int)text.Y;
                 ModEntry.textbox_h.SetTextExt(X, X + (int)_char.X, Y, Y + (int)_char.Y);
-            }
+            }else if(Game1.keyboardDispatcher.Subscriber == null)
+                ModEntry.textbox_h.enableInput(false);
         }
         public static void TextBox_Text(TextBox __instance, string ____text)
         {

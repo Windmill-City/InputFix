@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Context.h"
 
 HRESULT __stdcall TfActiveLanguageProfileNotifySink::QueryInterface(REFIID riid, void** ppvObject)
@@ -114,11 +113,19 @@ ULONG __stdcall TfContextOwner::Release(void)
 
 HRESULT __stdcall TfContextOwner::GetACPFromPoint(const POINT* ptScreen, DWORD dwFlags, LONG* pacp)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT __stdcall TfContextOwner::GetTextExt(LONG acpStart, LONG acpEnd, RECT* prc, BOOL* pfClipped)
 {
+	*pfClipped = FALSE;
+
+	//it is required, if you set pfOK=FALSE at onStartComposition
+	if (acpStart == acpEnd)
+	{
+		return E_INVALIDARG;
+	}
+
 	prc->left = TextExt.left;
 	prc->right = TextExt.right;
 	prc->top = TextExt.top;
@@ -144,7 +151,8 @@ HRESULT __stdcall TfContextOwner::GetStatus(TF_STATUS* pdcs)
 
 HRESULT __stdcall TfContextOwner::GetWnd(HWND* phwnd)
 {
-	phwnd = &hwnd;
+	//phwnd = &hwnd;
+	phwnd = NULL;
 	return S_OK;
 }
 
@@ -153,23 +161,24 @@ HRESULT __stdcall TfContextOwner::GetAttribute(REFGUID rguidAttribute, VARIANT* 
 	pvarValue->vt = VT_EMPTY;
 	return S_OK;
 }
-
-TfContextOwnerCompositionSink::TfContextOwnerCompositionSink()
-{
-}
-
 /**************************************************************************
 
    ITfContextOwnerCompositionSink struct impl
 
 **************************************************************************/
-TfContextOwnerCompositionSink::TfContextOwnerCompositionSink(StartCompositionCallBack start, UpdateCompositionCallBack update, EndCompositionCallBack end)
-{
-	StartComposition = start;
-	UpdateComposition = update;
-	EndComposition = end;
-}
 
+TfContextOwnerCompositionSink::TfContextOwnerCompositionSink(HWND _hwnd)
+{
+	hwnd = _hwnd;
+	enable = false;
+}
+TfContextOwnerCompositionSink::~TfContextOwnerCompositionSink()
+{
+}
+void TfContextOwnerCompositionSink::SetEnable(BOOL _enable)
+{
+	enable = _enable;
+}
 HRESULT __stdcall TfContextOwnerCompositionSink::QueryInterface(REFIID riid, void** ppvObject)
 {
 	*ppvObject = NULL;
@@ -205,20 +214,21 @@ ULONG __stdcall TfContextOwnerCompositionSink::Release(void)
 
 HRESULT __stdcall TfContextOwnerCompositionSink::OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk)
 {
-	*pfOk = FALSE;
-	//StartComposition(pComposition, pfOk);
+	*pfOk = enable;
+	SendMessage(hwnd, WM_IME_STARTCOMPOSITION, 0, 0);
 	return S_OK;
 }
 
 HRESULT __stdcall TfContextOwnerCompositionSink::OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew)
 {
-	//UpdateComposition(pComposition, pRangeNew);
+	
+	SendMessage(hwnd, WM_IME_COMPOSITION, 0, 0);
 	return S_OK;
 }
 
 
 HRESULT __stdcall TfContextOwnerCompositionSink::OnEndComposition(ITfCompositionView* pComposition)
 {
-	//EndComposition(pComposition);
+	SendMessage(hwnd, WM_IME_ENDCOMPOSITION, 0, 0);
 	return S_OK;
 }

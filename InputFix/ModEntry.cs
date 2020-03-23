@@ -11,6 +11,7 @@ namespace InputFix
     public class ModEntry : Mod
     {
         public static TSF tsf;
+        public static IMonitor monitor;
         public static TextBoxHelper textbox_h;
         /*********
         ** Public methods
@@ -19,12 +20,11 @@ namespace InputFix
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
+            monitor = this.Monitor;
             tsf = new TSF();
             tsf.AssociateFocus(Game1.game1.Window.Handle);
 
             textbox_h = new TextBoxHelper(tsf, Game1.game1.Window.Handle);
-
-            textbox_h.enableInput(false);
 
             HarmonyInstance harmony = HarmonyInstance.Create(base.ModManifest.UniqueID);
 
