@@ -60,6 +60,7 @@ void TSF::CreateContext(System::IntPtr ptr) {
 	pin_ptr<TfEditCookie> p_EditCookie = &EditCookie;
 	sink = new TfContextOwnerCompositionSink((HWND)(int)ptr);
 	HRESULT hr = DocMgr->CreateContext(id, 0, sink, p_context, p_EditCookie);
+	sink->SetCookie(EditCookie);
 
 	if (FAILED(hr))
 		throw gcnew System::Exception("Failed to create Context");
@@ -78,6 +79,21 @@ void TSF::CreateContext(System::IntPtr ptr) {
 
 	if(ownerCookie == -1)
 		throw gcnew System::Exception("Failed to advise ITfContextOwner");
+
+	/*ITfSource* _source;
+	pin_ptr<ITfSource*> p__source = &_source;
+	hr = mgr->QueryInterface(IID_ITfSource, (void**)p__source);
+
+	if (FAILED(hr))
+		throw gcnew System::Exception("Failed to query ITfSource");
+
+	tesink = new TfTransitoryExtensionSink((HWND)(int)ptr);
+
+	p_cookie = &teCookie;
+	_source->AdviseSink(IID_ITfTransitoryExtensionSink, tesink, p_cookie);
+
+	if (teCookie == -1)
+		throw gcnew System::Exception("Failed to advise ITfTransitoryExtensionSink");*/
 }
 
 void TSF::PushContext() {
@@ -94,6 +110,14 @@ void TSF::PopContext() {
 }
 
 void TSF::ReleaseContext() {
+	ITfSource* source;
+	pin_ptr<ITfSource*> p_source = &source;
+	HRESULT hr = context->QueryInterface(IID_ITfSource, (void**)p_source);
+
+	if (FAILED(hr))
+		throw gcnew System::Exception("Failed to query ITfSource");
+	source->UnadviseSink(ownerCookie);
+	ownerCookie = NULL;
 	if (context) {
 		context->Release();
 	}

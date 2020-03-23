@@ -161,6 +161,63 @@ HRESULT __stdcall TfContextOwner::GetAttribute(REFGUID rguidAttribute, VARIANT* 
 	pvarValue->vt = VT_EMPTY;
 	return S_OK;
 }
+
+/**************************************************************************
+
+   TfTextEditSink struct impl
+
+**************************************************************************/
+
+TfTextEditSink::TfTextEditSink(HWND _hwnd)
+{
+	hwnd = _hwnd;
+}
+
+HRESULT __stdcall TfTextEditSink::QueryInterface(REFIID riid, void** ppvObject)
+{
+	*ppvObject = NULL;
+
+	if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_ITfTransitoryExtensionSink))
+	{
+		*ppvObject = (ITfTransitoryExtensionSink*)this;
+	}
+
+	if (*ppvObject)
+	{
+		(*(LPUNKNOWN*)ppvObject)->AddRef();
+		return S_OK;
+	}
+	return E_NOINTERFACE;
+}
+
+ULONG __stdcall TfTextEditSink::AddRef(void)
+{
+	return ++m_ObjRefCount;
+}
+
+ULONG __stdcall TfTextEditSink::Release(void)
+{
+	if (--m_ObjRefCount == 0)
+	{
+		delete this;
+		return 0;
+	}
+
+	return m_ObjRefCount;
+}
+
+HRESULT __stdcall TfTextEditSink::TfTextEditSink::OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord)
+{
+	/*WCHAR* text = new WCHAR[128];
+	ULONG pcch;
+	ITfContextView* view;
+	pic->GetActiveView(&view);
+	for (int i = 0; i < pcch; i++) {
+		WCHAR _char = text[i];
+		SendMessage(hwnd, WM_IME_CHAR, _char, 0);
+	}*/
+	return S_OK;
+}
 /**************************************************************************
 
    ITfContextOwnerCompositionSink struct impl
@@ -174,6 +231,10 @@ TfContextOwnerCompositionSink::TfContextOwnerCompositionSink(HWND _hwnd)
 }
 TfContextOwnerCompositionSink::~TfContextOwnerCompositionSink()
 {
+}
+void TfContextOwnerCompositionSink::SetCookie(DWORD _cookie)
+{
+	cookie = _cookie;
 }
 void TfContextOwnerCompositionSink::SetEnable(BOOL _enable)
 {
@@ -230,5 +291,14 @@ HRESULT __stdcall TfContextOwnerCompositionSink::OnUpdateComposition(ITfComposit
 HRESULT __stdcall TfContextOwnerCompositionSink::OnEndComposition(ITfCompositionView* pComposition)
 {
 	SendMessage(hwnd, WM_IME_ENDCOMPOSITION, 0, 0);
+	ITfRange* range;
+	pComposition->GetRange(&range);
+	WCHAR* text = new WCHAR[128];
+	ULONG pcch;
+	range->GetText(cookie, 0, text, 128, &pcch);
+	for (int i = 0; i < pcch; i++) {
+		WCHAR _char = text[i];
+		SendMessage(hwnd, WM_IME_CHAR, _char, 0);
+	}
 	return S_OK;
 }

@@ -35,6 +35,27 @@ public:
 };
 /**************************************************************************
 
+   ITfTransitoryExtensionSink struct definition
+
+**************************************************************************/
+struct TfTextEditSink : ITfTextEditSink
+{
+private:
+    DWORD                        m_ObjRefCount;
+    HWND                         hwnd;
+public:
+    TfTextEditSink(HWND _hwnd);
+    //IUnKnown
+    virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
+    virtual ULONG __stdcall AddRef(void) override;
+    virtual ULONG __stdcall Release(void) override;
+
+    //ITfTextEditSink
+    virtual HRESULT __stdcall OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord) override;
+
+};
+/**************************************************************************
+
    ITfContextOwnerCompositionSink struct definition
 
 **************************************************************************/
@@ -50,6 +71,7 @@ private:
 public:
     TfContextOwnerCompositionSink(HWND _hwnd);
     ~TfContextOwnerCompositionSink();
+    void SetCookie(DWORD _cookie);
     void SetEnable(BOOL _enable);
     //IUnKnown
     virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override;
