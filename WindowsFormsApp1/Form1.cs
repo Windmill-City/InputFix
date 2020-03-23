@@ -5,14 +5,15 @@ namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-        int last = DateTime.Now.Millisecond;
+        DateTime last = DateTime.Now;
 
         private void Application_Idle(object sender, System.EventArgs e)
         {
-            var time = DateTime.Now.Millisecond;
-            if(time - last > 1000)
+            var time = DateTime.Now;
+            if(time.Subtract(last).TotalMilliseconds > 1000)
             {
                 label1.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                last = DateTime.Now;
             }
         }
 
