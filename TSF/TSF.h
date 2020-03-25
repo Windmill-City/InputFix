@@ -1,4 +1,4 @@
-//#define MANAGED
+#define MANAGED
 
 #ifdef MANAGED
 #pragma managed
@@ -10,13 +10,13 @@
 #define CheckHr(hr,desc) \
 if (FAILED(hr))\
 	throw gcnew System::Exception(desc);
-#define Pin(x,type) (pin_ptr<type>)x
-#define Handle System::IntPtr
+#define Pin(x,type) pin_ptr<type> p_##x = &x;
+#define _Handle System::IntPtr
 #define ToHWND(x) (HWND)(int)x
 #else
 #define CheckHr(hr,desc)
-#define Pin(x,type) x
-#define Handle HWND
+#define Pin(x,type) type* p_##x = &x;
+#define _Handle HWND
 #define ToHWND(x) x
 #endif
 
@@ -51,13 +51,13 @@ public:
     TSF();
     ~TSF();
 
-    void CreateContext(Handle);
+    void CreateContext(_Handle);
     void PushContext();
     void PopContext();
     void ReleaseContext();
     void SetTextExt(int left, int right, int top, int bottom);
     void SetEnable(bool enable);
     void SetFocus();
-    void AssociateFocus(Handle);
+    void AssociateFocus(_Handle);
 };
 

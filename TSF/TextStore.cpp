@@ -169,7 +169,7 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
     TS_SD_READONLY  // if set, document is read only; writes will fail
     TS_SD_LOADING   // if set, document is loading, expect additional inserts
     */
-    pdcs->dwDynamicFlags = 0;
+    pdcs->dwDynamicFlags = m_status.dwDynamicFlags;
 
     /*
     Can be zero or:
@@ -178,7 +178,7 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
     TS_SS_TRANSITORY    // if set, the document is expected to have a short lifespan
     TS_SS_NOHIDDENTEXT  // if set, the document will never contain hidden text (for perf)
     */
-    pdcs->dwStaticFlags = 0;
+    pdcs->dwStaticFlags = m_status.dwStaticFlags;
 
     return S_OK;
 }
@@ -226,15 +226,94 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
         return E_INVALIDARG;
     }
 
+    //find out which end of the selection the caret (insertion point) is
+    POINT   pt;
+    LRESULT lPos;
+    GetCaretPos(&pt);
+    lPos = ::SendMessage(m_hWnd, EM_POSFROMCHAR, m_acpStart, 0);
+
+    //if the caret position is the same as the start character, then the selection end is the start of the selection
+    m_ActiveSelEnd = ((pt.x == LOWORD(lPos) && pt.y == HIWORD(lPos)) ? TS_AE_START : TS_AE_END);
+
     pSelection[0].acpStart = m_acpStart;
     pSelection[0].acpEnd = m_acpEnd;
+    pSelection[0].style.fInterimChar = m_fInterimChar;
+    if (m_fInterimChar)
+    {
+        /*
+        fInterimChar will be set when an intermediate character has been
+        set. One example of when this will happen is when an IME is being
+        used to enter characters and a character has been set, but the IME
+        is still active.
+        */
+        pSelection[0].style.ase = TS_AE_NONE;
+    }
+    else
+    {
+        pSelection[0].style.ase = m_ActiveSelEnd;
+    }
+
+    *pcFetched = 1;
 
     return S_OK;
 }
 
 STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSelection)
 {
-	return S_OK;
+    //verify pSelection
+    if (NULL == pSelection)
+    {
+        return E_INVALIDARG;
+    }
+
+    if (ulCount > 1)
+    {
+        //this implementaiton only supports a single selection
+        return E_INVALIDARG;
+    }
+
+    //does the caller have a lock
+    if (!_IsLocked(TS_LF_READWRITE))
+    {
+        //the caller doesn't have a lock
+        return TS_E_NOLOCK;
+    }
+
+    m_acpStart = pSelection[0].acpStart;
+    m_acpEnd = pSelection[0].acpEnd;
+    m_fInterimChar = pSelection[0].style.fInterimChar;
+    if (m_fInterimChar)
+    {
+        /*
+        fInterimChar will be set when an intermediate character has been
+        set. One example of when this will happen is when an IME is being
+        used to enter characters and a character has been set, but the IME
+        is still active.
+        */
+        m_ActiveSelEnd = TS_AE_NONE;
+    }
+    else
+    {
+        m_ActiveSelEnd = pSelection[0].style.ase;
+    }
+
+    //if the selection end is at the start of the selection, reverse the parameters
+    LONG    lStart = m_acpStart;
+    LONG    lEnd = m_acpEnd;
+
+    if (TS_AE_START == m_ActiveSelEnd)
+    {
+        lStart = m_acpEnd;
+        lEnd = m_acpStart;
+    }
+
+    m_fNotify = FALSE;
+
+    ::SendMessage(m_hWnd, EM_SETSEL, lStart, lEnd);
+
+    m_fNotify = TRUE;
+
+    return S_OK;
 }
 
 STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULONG cchPlainReq, ULONG* pcchPlainRet, TS_RUNINFO* prgRunInfo, ULONG cRunInfoReq, ULONG* pcRunInfoRet, LONG* pacpNext)
@@ -457,11 +536,17 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
         pacpEnd = &lTemp;
     }
 
-    LONG    acpStart = m_acpStart;
+    LONG    acpStart;
     LONG    acpOldEnd;
-    LONG    acpNewEnd = m_acpEnd;
+    LONG    acpNewEnd;
 
     acpOldEnd = m_acpEnd;
+
+    //set the start point after the insertion
+    acpStart = m_acpStart;
+
+    //set the end point after the insertion
+    acpNewEnd = m_acpStart + cch;
 
     if (dwFlags & TS_IAS_QUERYONLY)
     {
@@ -469,6 +554,29 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
         *pacpEnd = acpOldEnd;
         return S_OK;
     }
+
+    LPWSTR  pchCopy;
+
+    pchCopy = (LPWSTR)GlobalAlloc(GMEM_FIXED, (cch + 1) * sizeof(WCHAR));
+    if (NULL == pchCopy)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    //pwszText will most likely not be NULL terminated
+    CopyMemory(pchCopy, pchText, cch * sizeof(WCHAR));
+    pchCopy[cch] = 0;
+
+    //don't notify TSF of text and selection changes when in response to a TSF action
+    m_fNotify = FALSE;
+
+    //insert the text
+    ::SendMessage(m_hWnd, EM_REPLACESEL, TRUE, (LPARAM)pchCopy);
+
+    //set the selection
+    ::SendMessage(m_hWnd, EM_SETSEL, acpStart, acpNewEnd);
+
+    m_fNotify = TRUE;
 
     if (!(dwFlags & TS_IAS_NOQUERY))
     {
@@ -480,6 +588,8 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
     pChange->acpStart = acpStart;
     pChange->acpOldEnd = acpOldEnd;
     pChange->acpNewEnd = acpNewEnd;
+
+    GlobalFree(pchCopy);
 
     //defer the layout change notification until the document is unlocked
     m_fLayoutChanged = TRUE;

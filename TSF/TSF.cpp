@@ -5,17 +5,20 @@ TSF::TSF() {
 	HRESULT hr = CoInitialize(NULL);//A STA Thread is required or TSF wont work
 	CheckHr(hr,"Failed to CoInitialize, need to run at a STA Thread");
 
-	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)Pin(&mgr,ITfThreadMgr*));
+	Pin(mgr, ITfThreadMgr*)
+	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)p_mgr);
 	CheckHr(hr,"Failed to create ThreadMgr");
 
-	hr = mgr->Activate(Pin(&id,TfClientId));
+	Pin(id, TfClientId);
+	hr = mgr->Activate(p_id);
 	CheckHr(hr,"Failed to Activate");
 
 	ITfSource* source;
 	hr = mgr->QueryInterface(IID_ITfSource, (void**)&source);
 	CheckHr(hr, "Failed to query ITfSource");
 
-	hr = mgr->CreateDocumentMgr(Pin(&DocMgr,ITfDocumentMgr*));
+	Pin(DocMgr, ITfDocumentMgr*);
+	hr = mgr->CreateDocumentMgr(p_DocMgr);
 	CheckHr(hr, "Failed to create DocMgr");
 }
 
@@ -41,9 +44,11 @@ TSF::~TSF()
 	CoUninitialize();
 }
 
-void TSF::CreateContext(Handle ptr) {
+void TSF::CreateContext(_Handle ptr) {
 	edit = new TextEdit(ToHWND(ptr));
-	HRESULT hr = DocMgr->CreateContext(id, 0, edit, Pin(&context,ITfContext*), Pin(&EditCookie, TfEditCookie));
+	Pin(context, ITfContext*);
+	Pin(EditCookie, TfEditCookie)
+	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
 	CheckHr(hr, "Failed to create Context");
 }
 
@@ -78,7 +83,7 @@ void TSF::SetFocus() {
 	mgr->SetFocus(DocMgr);
 }
 
-void TSF::AssociateFocus(Handle hwnd) {
+void TSF::AssociateFocus(_Handle hwnd) {
 	ITfDocumentMgr* prev_DocMgr;
 	mgr->AssociateFocus(ToHWND(hwnd),DocMgr, &prev_DocMgr);
 	if (prev_DocMgr && prev_DocMgr != DocMgr) {

@@ -30,9 +30,12 @@ private:
 	//TextStore
 	LONG                    m_acpStart;
 	LONG                    m_acpEnd;
+	BOOL                    m_fInterimChar;
+	TsActiveSelEnd          m_ActiveSelEnd;
 	//TextStoreSink
 	ADVISE_SINK             m_AdviseSink;
 	ITextStoreACPServices*  m_pServices;
+	BOOL                    m_fNotify;
 	//DocLock
 	BOOL                    m_fLocked;
 	DWORD                   m_dwLockType;
