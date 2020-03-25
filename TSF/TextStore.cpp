@@ -241,7 +241,142 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
 
 STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULONG cchPlainReq, ULONG* pcchPlainRet, TS_RUNINFO* prgRunInfo, ULONG cRunInfoReq, ULONG* pcRunInfoRet, LONG* pacpNext)
 {
-	return E_NOTIMPL;
+    //does the caller have a lock
+    if (!_IsLocked(TS_LF_READ))
+    {
+        //the caller doesn't have a lock
+        return TS_E_NOLOCK;
+    }
+
+    BOOL    fDoText = cchPlainReq > 0;
+    BOOL    fDoRunInfo = cRunInfoReq > 0;
+    LONG    cchTotal = 0;
+    HRESULT hr = E_FAIL;
+
+    if (pcchPlainRet)
+    {
+        *pcchPlainRet = 0;
+    }
+
+    if (fDoRunInfo)
+    {
+        *pcRunInfoRet = 0;
+    }
+
+    if (pacpNext)
+    {
+        *pacpNext = acpStart;
+    }
+
+    //get all of the text
+    LPWSTR  pwszText = L"";
+
+    //validate the start pos
+    if ((acpStart < 0) || (acpStart > cchTotal))
+    {
+        hr = TS_E_INVALIDPOS;
+    }
+    else
+    {
+        //are we at the end of the document
+        if (acpStart == cchTotal)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            ULONG    cchReq;
+
+            /*
+            acpEnd will be -1 if all of the text up to the end is being requested.
+            */
+
+            if (acpEnd >= acpStart)
+            {
+                cchReq = acpEnd - acpStart;
+            }
+            else
+            {
+                cchReq = cchTotal - acpStart;
+            }
+
+            if (fDoText)
+            {
+                if (cchReq > cchPlainReq)
+                {
+                    cchReq = cchPlainReq;
+                }
+
+                //extract the specified text range
+                LPWSTR  pwszStart = pwszText + acpStart;
+
+                if (pchPlain && cchPlainReq)
+                {
+                    //the text output is not NULL terminated
+                    CopyMemory(pchPlain, pwszStart, cchReq * sizeof(WCHAR));
+                }
+            }
+
+            //it is possible that only the length of the text is being requested
+            if (pcchPlainRet)
+            {
+                *pcchPlainRet = cchReq;
+            }
+
+            if (fDoRunInfo)
+            {
+                /*
+                Runs are used to separate text characters from formatting characters.
+
+                In this example, sequences inside and including the <> are treated as
+                control sequences and are not displayed.
+
+                Plain text = "Text formatting."
+                Actual text = "Text <B><I>formatting</I></B>."
+
+                If all of this text were requested, the run sequence would look like this:
+
+                prgRunInfo[0].type = TS_RT_PLAIN;   //"Text "
+                prgRunInfo[0].uCount = 5;
+
+                prgRunInfo[1].type = TS_RT_HIDDEN;  //<B><I>
+                prgRunInfo[1].uCount = 6;
+
+                prgRunInfo[2].type = TS_RT_PLAIN;   //"formatting"
+                prgRunInfo[2].uCount = 10;
+
+                prgRunInfo[3].type = TS_RT_HIDDEN;  //</B></I>
+                prgRunInfo[3].uCount = 8;
+
+                prgRunInfo[4].type = TS_RT_PLAIN;   //"."
+                prgRunInfo[4].uCount = 1;
+
+                TS_RT_OPAQUE is used to indicate characters or character sequences
+                that are in the document, but are used privately by the application
+                and do not map to text.  Runs of text tagged with TS_RT_OPAQUE should
+                NOT be included in the pchPlain or cchPlainOut [out] parameters.
+                */
+
+                /*
+                This implementation is plain text, so the text only consists of one run.
+                If there were multiple runs, it would be an error to have consecuative runs
+                of the same type.
+                */
+                * pcRunInfoRet = 1;
+                prgRunInfo[0].type = TS_RT_PLAIN;
+                prgRunInfo[0].uCount = cchReq;
+            }
+
+            if (pacpNext)
+            {
+                *pacpNext = acpStart + cchReq;
+            }
+
+            hr = S_OK;
+        }
+    }
+
+    return hr;
 }
 
 STDMETHODIMP TextEdit::SetText(DWORD dwFlags, LONG acpStart, LONG acpEnd, const WCHAR* pchText, ULONG cch, TS_TEXTCHANGE* pChange)
