@@ -3,35 +3,24 @@
 
 TSF::TSF() {
 	HRESULT hr = CoInitialize(NULL);//A STA Thread is required or TSF wont work
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to CoInitialize, need to run at a STA Thread");
-	pin_ptr<ITfThreadMgr*> p_mgr = &mgr;
-	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)p_mgr);
+	CheckHr(hr,"Failed to CoInitialize, need to run at a STA Thread");
 
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to create ThreadMgr");
+	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)Pin(&mgr,ITfThreadMgr*));
+	CheckHr(hr,"Failed to create ThreadMgr");
 
-	pin_ptr<TfClientId> p_id = &id;
-	hr = mgr->Activate(p_id);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to Activate");
+	hr = mgr->Activate(Pin(&id,TfClientId));
+	CheckHr(hr,"Failed to Activate");
 
 	ITfSource* source;
-	pin_ptr<ITfSource*> p_source = &source;
 	hr = mgr->QueryInterface(IID_ITfSource, (void**)&source);
+	CheckHr(hr, "Failed to query ITfSource");
 
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to query ITfSource");
-
-	pin_ptr<ITfDocumentMgr*> p_DocMgr = &DocMgr;
-	hr = mgr->CreateDocumentMgr(p_DocMgr);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to create DocMgr");
+	hr = mgr->CreateDocumentMgr(Pin(&DocMgr,ITfDocumentMgr*));
+	CheckHr(hr, "Failed to create DocMgr");
 }
 
-TSF::~TSF() {
+TSF::~TSF()
+{
 	if (DocMgr)
 	{
 		//pop all of the contexts off of the stack
@@ -52,27 +41,21 @@ TSF::~TSF() {
 	CoUninitialize();
 }
 
-void TSF::CreateContext(System::IntPtr ptr) {
-	pin_ptr<ITfContext*> p_context = &context;
-	pin_ptr<TfEditCookie> p_EditCookie = &EditCookie;
-	edit = new TextEdit((HWND)(int)ptr);
-	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to create Context");
+void TSF::CreateContext(Handle ptr) {
+	edit = new TextEdit(ToHWND(ptr));
+	HRESULT hr = DocMgr->CreateContext(id, 0, edit, Pin(&context,ITfContext*), Pin(&EditCookie, TfEditCookie));
+	CheckHr(hr, "Failed to create Context");
 }
 
 void TSF::PushContext() {
 	//push the context onto the document stack
 	HRESULT hr = DocMgr->Push(context);
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to Push");
+	CheckHr(hr, "Failed to Push");
 }
 
 void TSF::PopContext() {
 	HRESULT hr = DocMgr->Pop(TF_POPF_ALL);
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to Pop");
+	CheckHr(hr, "Failed to Pop");
 }
 
 void TSF::ReleaseContext() {
@@ -95,10 +78,9 @@ void TSF::SetFocus() {
 	mgr->SetFocus(DocMgr);
 }
 
-void TSF::AssociateFocus(System::IntPtr hwnd) {
+void TSF::AssociateFocus(Handle hwnd) {
 	ITfDocumentMgr* prev_DocMgr;
-	pin_ptr<ITfDocumentMgr*> p_prev_DocMgr = &prev_DocMgr;
-	mgr->AssociateFocus((HWND)(int)hwnd,DocMgr, p_prev_DocMgr);
+	mgr->AssociateFocus(ToHWND(hwnd),DocMgr, &prev_DocMgr);
 	if (prev_DocMgr && prev_DocMgr != DocMgr) {
 		prev_DocMgr->Release();
 	}

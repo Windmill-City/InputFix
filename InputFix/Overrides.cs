@@ -32,7 +32,7 @@ namespace InputFix
 
         public static bool KeyboardInput_HookProc(ref IntPtr __result, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr ___prevWndProc, ref IntPtr ___hIMC)
         {
-            ModEntry.monitor.Log("MSG:"+msg,StardewModdingAPI.LogLevel.Debug);
+            ModEntry.monitor.Log("MSG:" + msg, StardewModdingAPI.LogLevel.Debug);
             if (___hIMC != (IntPtr)0)
             {
                 ImmReleaseContext(___prevWndProc, ___hIMC);
@@ -63,7 +63,7 @@ namespace InputFix
 
         public static void TextBox_Selected(TextBox __instance, string ____text, bool ____selected)
         {
-            if(Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber == __instance && ____selected)
+            if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber == __instance && ____selected)
             {
                 ModEntry.textbox_h.enableInput(true);
                 var text = __instance.Font.MeasureString(____text);
@@ -71,7 +71,8 @@ namespace InputFix
                 int X = __instance.X + (int)text.X;
                 int Y = __instance.Y + (int)text.Y;
                 ModEntry.textbox_h.SetTextExt(X, X + (int)_char.X, Y, Y + (int)_char.Y);
-            }else if(Game1.keyboardDispatcher.Subscriber == null)
+            }
+            else if (Game1.keyboardDispatcher.Subscriber == null)
                 ModEntry.textbox_h.enableInput(false);
         }
         public static void TextBox_Text(TextBox __instance, string ____text)

@@ -10,7 +10,7 @@ namespace WindowsFormsApp1
         private void Application_Idle(object sender, System.EventArgs e)
         {
             var time = DateTime.Now;
-            if(time.Subtract(last).TotalMilliseconds > 1000)
+            if (time.Subtract(last).TotalMilliseconds > 1000)
             {
                 label1.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 last = DateTime.Now;
