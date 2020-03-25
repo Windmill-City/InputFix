@@ -38,12 +38,6 @@ STDMETHODIMP_(HRESULT __stdcall)  TextEdit::QueryInterface(REFIID riid, void** p
         *ppvObject = (ITextStoreACP*)this;
     }
 
-    //ITfContextOwnerCompositionSink
-    else if (IsEqualIID(riid, IID_ITfContextOwnerCompositionSink))
-    {
-        *ppvObject = (ITfContextOwnerCompositionSink*)this;
-    }
-
     if (*ppvObject)
     {
         (*(LPUNKNOWN*)ppvObject)->AddRef();

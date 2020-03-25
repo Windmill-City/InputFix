@@ -169,7 +169,7 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
     TS_SD_READONLY  // if set, document is read only; writes will fail
     TS_SD_LOADING   // if set, document is loading, expect additional inserts
     */
-    pdcs->dwDynamicFlags = m_status.dwDynamicFlags;
+    pdcs->dwDynamicFlags = 0;
 
     /*
     Can be zero or:
@@ -178,7 +178,7 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
     TS_SS_TRANSITORY    // if set, the document is expected to have a short lifespan
     TS_SS_NOHIDDENTEXT  // if set, the document will never contain hidden text (for perf)
     */
-    pdcs->dwStaticFlags = m_status.dwStaticFlags;
+    pdcs->dwStaticFlags = 0;
 
     return S_OK;
 }
@@ -229,14 +229,12 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
     pSelection[0].acpStart = m_acpStart;
     pSelection[0].acpEnd = m_acpEnd;
 
-    *pcFetched = 1;
-
     return S_OK;
 }
 
 STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSelection)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULONG cchPlainReq, ULONG* pcchPlainRet, TS_RUNINFO* prgRunInfo, ULONG cRunInfoReq, ULONG* pcRunInfoRet, LONG* pacpNext)
@@ -381,7 +379,33 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
 
 STDMETHODIMP TextEdit::SetText(DWORD dwFlags, LONG acpStart, LONG acpEnd, const WCHAR* pchText, ULONG cch, TS_TEXTCHANGE* pChange)
 {
-	return E_NOTIMPL;
+    HRESULT hr;
+
+    /*
+    dwFlags can be:
+    TS_ST_CORRECTION
+    */
+
+    if (dwFlags & TS_ST_CORRECTION)
+    {
+        OutputDebugString(TEXT("\tTS_ST_CORRECTION\n"));
+    }
+
+    //set the selection to the specified range
+    TS_SELECTION_ACP    tsa;
+    tsa.acpStart = acpStart;
+    tsa.acpEnd = acpEnd;
+    tsa.style.ase = TS_AE_START;
+    tsa.style.fInterimChar = FALSE;
+
+    hr = SetSelection(1, &tsa);
+
+    if (SUCCEEDED(hr))
+    {
+        //call InsertTextAtSelection
+        hr = InsertTextAtSelection(TS_IAS_NOQUERY, pchText, cch, NULL, NULL, pChange);
+    }
+    return hr;
 }
 
 STDMETHODIMP TextEdit::GetFormattedText(LONG acpStart, LONG acpEnd, IDataObject** ppDataObject)
@@ -406,7 +430,61 @@ STDMETHODIMP TextEdit::InsertEmbedded(DWORD dwFlags, LONG acpStart, LONG acpEnd,
 
 STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText, ULONG cch, LONG* pacpStart, LONG* pacpEnd, TS_TEXTCHANGE* pChange)
 {
-	return E_NOTIMPL;
+    LONG    lTemp;
+
+    //does the caller have a lock
+    if (!_IsLocked(TS_LF_READWRITE))
+    {
+        //the caller doesn't have a lock
+        return TS_E_NOLOCK;
+    }
+
+    //verify pwszText
+    if (NULL == pchText)
+    {
+        return E_INVALIDARG;
+    }
+
+    //verify pacpStart
+    if (NULL == pacpStart)
+    {
+        pacpStart = &lTemp;
+    }
+
+    //verify pacpEnd
+    if (NULL == pacpEnd)
+    {
+        pacpEnd = &lTemp;
+    }
+
+    LONG    acpStart = m_acpStart;
+    LONG    acpOldEnd;
+    LONG    acpNewEnd = m_acpEnd;
+
+    acpOldEnd = m_acpEnd;
+
+    if (dwFlags & TS_IAS_QUERYONLY)
+    {
+        *pacpStart = acpStart;
+        *pacpEnd = acpOldEnd;
+        return S_OK;
+    }
+
+    if (!(dwFlags & TS_IAS_NOQUERY))
+    {
+        *pacpStart = acpStart;
+        *pacpEnd = acpNewEnd;
+    }
+
+    //set the TS_TEXTCHANGE members
+    pChange->acpStart = acpStart;
+    pChange->acpOldEnd = acpOldEnd;
+    pChange->acpNewEnd = acpNewEnd;
+
+    //defer the layout change notification until the document is unlocked
+    m_fLayoutChanged = TRUE;
+
+    return S_OK;
 }
 
 STDMETHODIMP TextEdit::InsertEmbeddedAtSelection(DWORD dwFlags, IDataObject* pDataObject, LONG* pacpStart, LONG* pacpEnd, TS_TEXTCHANGE* pChange)
