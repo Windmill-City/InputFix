@@ -18,15 +18,18 @@
     <ClInclude Include="TSF.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Context.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSF.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Context.cpp">
+    <ClCompile Include="TextStore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TextEdit.h">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TextEdit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

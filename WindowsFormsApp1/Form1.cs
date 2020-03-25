@@ -30,6 +30,12 @@ namespace WindowsFormsApp1
             InitializeComponent();
 
             Application.Idle += Application_Idle;
+            Application.Idle += Application_Idle1; ;
+        }
+
+        private void Application_Idle1(object sender, EventArgs e)
+        {
+            label1.Text = "nope";
         }
 
         protected override void WndProc(ref Message m)

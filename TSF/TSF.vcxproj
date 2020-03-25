@@ -154,11 +154,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Context.h" />
     <ClInclude Include="TSF.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Context.cpp" />
+    <ClCompile Include="TextEdit.cpp" />
+    <ClCompile Include="TextEdit.h" />
+    <ClCompile Include="TextStore.cpp" />
     <ClCompile Include="TSF.cpp" />
   </ItemGroup>
   <ItemGroup>

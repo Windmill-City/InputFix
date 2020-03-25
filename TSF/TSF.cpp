@@ -1,9 +1,7 @@
 #include "TSF.h"
-#include "Context.h"
-
+#include "TextEdit.h"
 
 TSF::TSF() {
-	//CoUninitialize();//Unsafe, but it actually work
 	HRESULT hr = CoInitialize(NULL);//A STA Thread is required or TSF wont work
 	if (FAILED(hr))
 		throw gcnew System::Exception("Failed to CoInitialize, need to run at a STA Thread");
@@ -31,7 +29,6 @@ TSF::TSF() {
 
 	if (FAILED(hr))
 		throw gcnew System::Exception("Failed to create DocMgr");
-	
 }
 
 TSF::~TSF() {
@@ -58,42 +55,11 @@ TSF::~TSF() {
 void TSF::CreateContext(System::IntPtr ptr) {
 	pin_ptr<ITfContext*> p_context = &context;
 	pin_ptr<TfEditCookie> p_EditCookie = &EditCookie;
-	sink = new TfContextOwnerCompositionSink((HWND)(int)ptr);
-	HRESULT hr = DocMgr->CreateContext(id, 0, sink, p_context, p_EditCookie);
-	sink->SetCookie(EditCookie);
+	edit = new TextEdit((HWND)(int)ptr);
+	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
 
 	if (FAILED(hr))
 		throw gcnew System::Exception("Failed to create Context");
-
-	owner = new TfContextOwner((HWND)(int)ptr);
-
-	ITfSource* source;
-	pin_ptr<ITfSource*> p_source = &source;
-	hr = context->QueryInterface(IID_ITfSource, (void**)p_source);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to query ITfSource");
-
-	pin_ptr<DWORD> p_cookie = &ownerCookie;
-	source->AdviseSink(IID_ITfContextOwner, owner, p_cookie);
-
-	if(ownerCookie == -1)
-		throw gcnew System::Exception("Failed to advise ITfContextOwner");
-
-	/*ITfSource* _source;
-	pin_ptr<ITfSource*> p__source = &_source;
-	hr = mgr->QueryInterface(IID_ITfSource, (void**)p__source);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to query ITfSource");
-
-	tesink = new TfTransitoryExtensionSink((HWND)(int)ptr);
-
-	p_cookie = &teCookie;
-	_source->AdviseSink(IID_ITfTransitoryExtensionSink, tesink, p_cookie);
-
-	if (teCookie == -1)
-		throw gcnew System::Exception("Failed to advise ITfTransitoryExtensionSink");*/
 }
 
 void TSF::PushContext() {
@@ -110,39 +76,19 @@ void TSF::PopContext() {
 }
 
 void TSF::ReleaseContext() {
-	ITfSource* source;
-	pin_ptr<ITfSource*> p_source = &source;
-	HRESULT hr = context->QueryInterface(IID_ITfSource, (void**)p_source);
-
-	if (FAILED(hr))
-		throw gcnew System::Exception("Failed to query ITfSource");
-	source->UnadviseSink(ownerCookie);
-	ownerCookie = NULL;
 	if (context) {
 		context->Release();
 	}
-	if (owner) {
-		owner->Release();
-	}
-	if (sink) {
-		sink->Release();
-	}
-}
-
-void TSF::SetScreenExt() {
-	owner->SetScreenExt();
-}
-
-void TSF::SetScreenExt(int left, int right, int top, int bottom) {
-	owner->SetScreenExt(left, right, top, bottom);
+	if (edit)
+		edit->Release();
 }
 
 void TSF::SetTextExt(int left, int right, int top, int bottom) {
-	owner->SetTextExt(left, right, top, bottom);
+	edit->SetTextBoxRect(left, right, top, bottom);
 }
 
 void TSF::SetEnable(bool enable) {
-	sink->SetEnable(enable);
+	edit->SetEnable(enable);
 }
 
 void TSF::SetFocus() {

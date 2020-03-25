@@ -36,13 +36,6 @@ namespace InputFix
 
             MethodInfo m_text = typeof(TextBox).GetMethod("set_Text", BindingFlags.Public | BindingFlags.Instance);
             harmony.Patch(m_text, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
-
-            Game1.game1.Window.ClientSizeChanged += Window_ClientSizeChanged;
-        }
-
-        private void Window_ClientSizeChanged(object sender, EventArgs e)
-        {
-            textbox_h.SetScreenExt();
         }
     }
 
@@ -55,16 +48,6 @@ namespace InputFix
             tsf = _tsf;
             tsf.CreateContext(_hWnd);
             tsf.PushContext();
-        }
-
-        public void SetScreenExt()
-        {
-            tsf.SetScreenExt();
-        }
-
-        public void SetScreenExt(int left, int right, int top, int bottom)
-        {
-            tsf.SetScreenExt(left, right, top, bottom);
         }
 
         public void SetTextExt(int left, int right, int top, int bottom)
