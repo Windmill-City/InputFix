@@ -40,6 +40,7 @@ if (FAILED(hr))\
 REFCLASS TSF {
     ITfThreadMgr* mgr;
     ITfDocumentMgr* DocMgr;
+    ITfContextOwnerCompositionServices* services;
 
     TfClientId id;
     ITfContext* context;
@@ -51,13 +52,19 @@ public:
     TSF();
     ~TSF();
 
+    void Active();
+    void Deactive();
     void CreateContext(_Handle);
     void PushContext();
     void PopContext();
     void ReleaseContext();
     void SetTextExt(int left, int right, int top, int bottom);
     void SetEnable(bool enable);
+    void ClearText();
+    void SetCaretX(int x);
     void SetFocus();
     void AssociateFocus(_Handle);
+
+    void TerminateComposition();
 };
 

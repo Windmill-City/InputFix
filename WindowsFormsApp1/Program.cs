@@ -13,8 +13,7 @@ namespace WindowsFormsApp1
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            TSF tsf = new TSF();
-            Application.Run(new Form1(tsf));
+            Application.Run(new Form1());
         }
     }
 }

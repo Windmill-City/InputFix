@@ -20,7 +20,7 @@ typedef struct
    TextEdit class definition
 
 **************************************************************************/
-class TextEdit : public ITextStoreACP
+class TextEdit : public IUnknown, public ITextStoreACP, public ITfContextOwnerCompositionSink
 {
 private:
 	DWORD                   m_ObjRefCount;
@@ -46,8 +46,12 @@ private:
 	int                     m_caret_X;
 	BOOL                    m_fLayoutChanged;
 public:
-	TextEdit(HWND hWnd);
+	//Composition
+	ITfCompositionView* m_composition;
 
+
+	TextEdit(HWND hWnd);
+	void ClearText();
 	void SetEnable(BOOL enable);
 	void SetTextBoxRect(int left, int top, int right, int bottom);
 	void SetCaret_X(int x);
@@ -82,6 +86,11 @@ public:
 	STDMETHODIMP GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd, RECT* prc, BOOL* pfClipped);
 	STDMETHODIMP GetScreenExt(TsViewCookie vcView, RECT* prc);
 	STDMETHODIMP GetWnd(TsViewCookie vcView, HWND* phwnd);
+
+	// Í¨¹ý ITfContextOwnerCompositionSink ¼Ì³Ð
+	STDMETHODIMP OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk) override;
+	STDMETHODIMP OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew) override;
+	STDMETHODIMP OnEndComposition(ITfCompositionView* pComposition) override;
 private:
 	//TextStoreSink
 	HRESULT _ClearAdviseSink(PADVISE_SINK pAdviseSink);
@@ -91,4 +100,7 @@ private:
 	BOOL _InternalLockDocument(DWORD dwLockFlags);
 	void _InternalUnlockDocument();
 	BOOL _IsLocked(DWORD dwLockType);
+	//Selection
+	BOOL _GetCurrentSelection(void);
+	HRESULT _GetText(LPWSTR* ppwsz, LPLONG pcch = NULL);
 };

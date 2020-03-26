@@ -9,14 +9,6 @@ TSF::TSF() {
 	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)p_mgr);
 	CheckHr(hr,"Failed to create ThreadMgr");
 
-	Pin(id, TfClientId);
-	hr = mgr->Activate(p_id);
-	CheckHr(hr,"Failed to Activate");
-
-	ITfSource* source;
-	hr = mgr->QueryInterface(IID_ITfSource, (void**)&source);
-	CheckHr(hr, "Failed to query ITfSource");
-
 	Pin(DocMgr, ITfDocumentMgr*);
 	hr = mgr->CreateDocumentMgr(p_DocMgr);
 	CheckHr(hr, "Failed to create DocMgr");
@@ -44,12 +36,28 @@ TSF::~TSF()
 	CoUninitialize();
 }
 
+void TSF::Active()
+{
+	Pin(id, TfClientId);
+	HRESULT hr = mgr->Activate(p_id);
+	CheckHr(hr, "Failed to Activate");
+}
+
+void TSF::Deactive()
+{
+	mgr->Deactivate();
+}
+
 void TSF::CreateContext(_Handle ptr) {
 	edit = new TextEdit(ToHWND(ptr));
 	Pin(context, ITfContext*);
 	Pin(EditCookie, TfEditCookie)
 	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
 	CheckHr(hr, "Failed to create Context");
+
+	Pin(services, ITfContextOwnerCompositionServices*);
+	hr = context->QueryInterface(IID_ITfContextOwnerCompositionServices, (void**)p_services);
+	CheckHr(hr, "Failed to query ITfContextOwnerCompositionServices");
 }
 
 void TSF::PushContext() {
@@ -79,6 +87,16 @@ void TSF::SetEnable(bool enable) {
 	edit->SetEnable(enable);
 }
 
+void TSF::ClearText()
+{
+	edit->ClearText();
+}
+
+void TSF::SetCaretX(int x)
+{
+	edit->SetCaret_X(x);
+}
+
 void TSF::SetFocus() {
 	mgr->SetFocus(DocMgr);
 }
@@ -89,4 +107,9 @@ void TSF::AssociateFocus(_Handle hwnd) {
 	if (prev_DocMgr && prev_DocMgr != DocMgr) {
 		prev_DocMgr->Release();
 	}
+}
+
+void TSF::TerminateComposition()
+{
+	services->TerminateComposition(NULL);//Passing Null to terminate all composition
 }

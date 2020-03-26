@@ -148,8 +148,8 @@ STDMETHODIMP TextEdit::RequestLock(DWORD dwLockFlags, HRESULT* phrSession)
     //lock the document
     _LockDocument(dwLockFlags);
 
-    //call OnLockGranted
-    *phrSession = m_AdviseSink.pTextStoreACPSink->OnLockGranted(dwLockFlags);
+    //call OnLockGranted    
+        *phrSession = m_AdviseSink.pTextStoreACPSink->OnLockGranted(dwLockFlags);
 
     //unlock the document
     _UnlockDocument();
@@ -225,6 +225,8 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
         */
         return E_INVALIDARG;
     }
+
+    _GetCurrentSelection();
 
     //find out which end of the selection the caret (insertion point) is
     POINT   pt;
@@ -318,16 +320,16 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
 
 STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULONG cchPlainReq, ULONG* pcchPlainRet, TS_RUNINFO* prgRunInfo, ULONG cRunInfoReq, ULONG* pcRunInfoRet, LONG* pacpNext)
 {
-    //does the caller have a lock
-    if (!_IsLocked(TS_LF_READ))
-    {
-        //the caller doesn't have a lock
-        return TS_E_NOLOCK;
-    }
+    // does the caller have a lock
+        if (!_IsLocked(TS_LF_READ))
+        {
+            //the caller doesn't have a lock
+            return TS_E_NOLOCK;
+        }
 
     BOOL    fDoText = cchPlainReq > 0;
     BOOL    fDoRunInfo = cRunInfoReq > 0;
-    LONG    cchTotal = 0;
+    LONG    cchTotal;
     HRESULT hr = E_FAIL;
 
     if (pcchPlainRet)
@@ -346,7 +348,12 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
     }
 
     //get all of the text
-    LPWSTR  pwszText = L"";
+    LPWSTR  pwszText;
+    hr = _GetText(&pwszText, &cchTotal);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
 
     //validate the start pos
     if ((acpStart < 0) || (acpStart > cchTotal))
@@ -453,6 +460,8 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
         }
     }
 
+    GlobalFree(pwszText);
+
     return hr;
 }
 
@@ -540,6 +549,8 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
     LONG    acpOldEnd;
     LONG    acpNewEnd;
 
+    _GetCurrentSelection();
+
     acpOldEnd = m_acpEnd;
 
     //set the start point after the insertion
@@ -577,6 +588,8 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
     ::SendMessage(m_hWnd, EM_SETSEL, acpStart, acpNewEnd);
 
     m_fNotify = TRUE;
+
+    _GetCurrentSelection();
 
     if (!(dwFlags & TS_IAS_NOQUERY))
     {
@@ -798,4 +811,39 @@ BOOL TextEdit::_IsLocked(DWORD dwLockType)
     }
 
     return m_fLocked && (m_dwLockType & dwLockType);
+}
+
+BOOL TextEdit::_GetCurrentSelection(void)
+{
+    //get the selection from the edit control
+    ::SendMessage(m_hWnd, EM_GETSEL, (WPARAM)&m_acpStart, (LPARAM)&m_acpEnd);
+
+    return TRUE;
+}
+#define TF_GETTEXTLENGTH 0x060E
+#define TF_GETTEXT 0x060D
+HRESULT TextEdit::_GetText(LPWSTR* ppwsz, LPLONG pcch)
+{
+    DWORD   cch;
+    LPWSTR  pwszText;
+
+    *ppwsz = NULL;
+
+    SendMessage(m_hWnd, TF_GETTEXTLENGTH, 0, (LPARAM)&cch);
+    pwszText = (LPWSTR)GlobalAlloc(GMEM_FIXED, (cch + 1) * sizeof(WCHAR));
+    if (NULL == pwszText)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    SendMessage(m_hWnd, TF_GETTEXT, (WPARAM)pwszText, cch + 1);
+
+    *ppwsz = pwszText;
+
+    if (pcch)
+    {
+        *pcch = cch;
+    }
+
+    return S_OK;
 }

@@ -9,30 +9,35 @@ namespace InputFix
     public class Overrides
     {
         [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr ImmGetContext(IntPtr hWnd);
-
-        [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr ImmReleaseContext(IntPtr hWnd, IntPtr hIMC);
-        [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr ImmAssociateContext(IntPtr hWnd, IntPtr hIMC);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        private const int WM_IME_COMPOSITION = 271;
-        private const int WM_IME_STARTCOMPOSITION = 269;
-        private const int WM_INPUTLANGCHANGE = 81;
         private const int WM_IME_SETCONTEXT = 0x0281;
-        private const int WM_SETFOCUS = 0x0007;
 
+        private const int WM_IME_STARTCOMPOSITION = 269;
+        private const int WM_IME_COMPOSITION = 271;
+        private const int WM_IME_ENDCOMPOSITION = 0x10E;
+
+        private const int WM_INPUTLANGCHANGE = 81;
+        
+        private const int WM_SETFOCUS = 0x0007;
+        private const int WM_KILLFOCUS = 0x0008;
+
+        private const int EM_REPLACESEL = 0x00C2;
+        private const int EM_SETSEL = 0x00B1;
+        private const int EM_GETSEL = 0x00B0;
+
+        private const int TF_GETTEXTLENGTH = 0x060E;
+        private const int TF_GETTEXT = 0x060D;
+
+        private static string temptext;
+        private static int sel_Start;
+        private static int sel_End;
         public static bool KeyboardInput_HookProc(ref IntPtr __result, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr ___prevWndProc, ref IntPtr ___hIMC)
         {
-            ModEntry.monitor.Log("MSG:" + msg, StardewModdingAPI.LogLevel.Debug);
+            //ModEntry.monitor.Log("MSG:" + msg, StardewModdingAPI.LogLevel.Debug);
             if (___hIMC != (IntPtr)0)
             {
                 ImmReleaseContext(___prevWndProc, ___hIMC);
@@ -40,13 +45,61 @@ namespace InputFix
             }
             switch (msg)
             {
-                case WM_SETFOCUS:
-                    //ModEntry.tsf.SetFocus();
-                    break;
+                case EM_REPLACESEL:
+                    temptext = Marshal.PtrToStringAuto(lParam);
+                    ModEntry.monitor.Log("TempText:" + temptext, StardewModdingAPI.LogLevel.Debug);
+                    sel_End = sel_Start + temptext.Length;
+                    ModEntry.textbox_h.text.Length = sel_End;//Ensure len
+                    int k = 0;
+                    for(int i = sel_Start; i < sel_End; i++)
+                    {
+                        var ch = temptext[k];
+                        ModEntry.textbox_h.text[i] = ch;
+                        k++;
+                    }
+                    __result = (IntPtr)1;
+                    goto Handled;
+                case EM_SETSEL:
+                    if ((int)wParam > (int)lParam)//if start > end, reverse it
+                    {
+                        sel_Start = (int)lParam;
+                        sel_End = (int)wParam;
+                    }
+                    else
+                    {
+                        sel_Start = (int)wParam;
+                        sel_End = (int)lParam;
+                    }
+                    ModEntry.monitor.Log("AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
+
+                    ModEntry.textbox_h.text.Length = sel_End;//Ensure len
+                    __result = (IntPtr)1;
+                    goto Handled;
+                    //GetSelection
+                case EM_GETSEL:
+                    Marshal.WriteInt32(wParam, sel_Start);//acpstart
+                    Marshal.WriteInt32(lParam, sel_End);//acpend
+                    __result = (IntPtr)1;
+                    goto Handled;
+                    //GetText
+                case TF_GETTEXTLENGTH:
+                    Marshal.WriteInt32(lParam, ModEntry.textbox_h.text.Length);//textlen
+                    __result = (IntPtr)1;
+                    goto Handled;
+                case TF_GETTEXT:
+                    int len = (int)lParam;//textlen
+                    char[] _text = ModEntry.textbox_h.text.ToString().ToCharArray();
+                    Marshal.Copy(_text, 0, wParam, _text.Length);
+                    __result = (IntPtr)1;
+                    goto Handled;
+                    //IMEs
                 case WM_IME_STARTCOMPOSITION:
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_COMPOSITION:
+                    __result = (IntPtr)1;
+                    goto Handled;
+                case WM_IME_ENDCOMPOSITION:
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_SETCONTEXT:
@@ -66,22 +119,31 @@ namespace InputFix
             if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber == __instance && ____selected)
             {
                 ModEntry.textbox_h.enableInput(true);
-                var text = __instance.Font.MeasureString(____text);
-                var _char = __instance.Font.MeasureString("字");
-                int X = __instance.X + (int)text.X;
-                int Y = __instance.Y + (int)text.Y;
-                ModEntry.textbox_h.SetTextExt(X, X + (int)_char.X, Y, Y + (int)_char.Y);
+                ModEntry.textbox_h.SetTextBox(__instance);
+                ModEntry.tsf.TerminateComposition();
+                ModEntry.tsf.ClearText();
+
             }
             else if (Game1.keyboardDispatcher.Subscriber == null)
+            {
                 ModEntry.textbox_h.enableInput(false);
+                ModEntry.tsf.TerminateComposition();
+                ModEntry.tsf.ClearText();
+            }
         }
         public static void TextBox_Text(TextBox __instance, string ____text)
         {
-            var text = __instance.Font.MeasureString(____text);
-            var _char = __instance.Font.MeasureString("字");
-            int X = __instance.X + (int)text.X;
-            int Y = __instance.Y + (int)text.Y;
-            ModEntry.textbox_h.SetTextExt(X, X + (int)_char.X, Y, Y + (int)_char.Y);
+            if (__instance == ModEntry.textbox_h.current)
+            {
+                var length = __instance.Font.MeasureString(____text).X;
+                ModEntry.textbox_h.SetCaretX((int)length + 16);
+            }
+
+        }
+
+        public static void DrawComposition(Game1 __instance)
+        {
+            ModEntry.textbox_h.drawComposition();
         }
     }
 }
