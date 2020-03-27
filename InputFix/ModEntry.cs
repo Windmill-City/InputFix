@@ -42,6 +42,17 @@ namespace InputFix
 
             MethodInfo m_draw = typeof(Game1).GetMethod("drawOverlays", BindingFlags.NonPublic | BindingFlags.Instance);
             harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition"));
+
+
+            FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
+            Type type = host.GetValue(Game1.game1).GetType();
+            MethodInfo m_idle = type.GetMethod("ApplicationIdle", BindingFlags.NonPublic | BindingFlags.Instance);
+            harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ModEntry), "HandleMsgFirst"));
+        }
+
+        private static void HandleMsgFirst()
+        {
+            tsf.PumpMsg(Game1.game1.Window.Handle);
         }
     }
 

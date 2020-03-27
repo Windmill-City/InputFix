@@ -9,6 +9,11 @@
 
 #define EDIT_VIEW_COOKIE    0
 
+#define TF_UNLOCKED      0x60F
+#define TF_LOCKED      0x606
+#define TF_GETTEXTLENGTH    0x060E
+#define TF_GETTEXT          0x060D
+
 typedef struct
 {
 	IUnknown* punkID;

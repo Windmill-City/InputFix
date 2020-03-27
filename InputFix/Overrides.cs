@@ -21,7 +21,7 @@ namespace InputFix
         private const int WM_IME_ENDCOMPOSITION = 0x10E;
 
         private const int WM_INPUTLANGCHANGE = 81;
-        
+
         private const int WM_SETFOCUS = 0x0007;
         private const int WM_KILLFOCUS = 0x0008;
 
@@ -31,6 +31,8 @@ namespace InputFix
 
         private const int TF_GETTEXTLENGTH = 0x060E;
         private const int TF_GETTEXT = 0x060D;
+        private const int TF_UNLOCKED = 0x60F;
+        private const int TF_LOCKED = 0x606;
 
         private static string temptext;
         private static int sel_Start;
@@ -51,12 +53,13 @@ namespace InputFix
                     sel_End = sel_Start + temptext.Length;
                     ModEntry.textbox_h.text.Length = sel_End;//Ensure len
                     int k = 0;
-                    for(int i = sel_Start; i < sel_End; i++)
+                    for (int i = sel_Start; i < sel_End; i++)
                     {
                         var ch = temptext[k];
                         ModEntry.textbox_h.text[i] = ch;
                         k++;
                     }
+                    ModEntry.monitor.Log("AfterReplace:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case EM_SETSEL:
@@ -70,41 +73,51 @@ namespace InputFix
                         sel_Start = (int)wParam;
                         sel_End = (int)lParam;
                     }
-                    ModEntry.monitor.Log("AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
+                    ModEntry.monitor.Log("SetSelection:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
 
                     ModEntry.textbox_h.text.Length = sel_End;//Ensure len
                     __result = (IntPtr)1;
                     goto Handled;
-                    //GetSelection
+                //GetSelection
                 case EM_GETSEL:
+                    ModEntry.monitor.Log("GetSelection:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
                     Marshal.WriteInt32(wParam, sel_Start);//acpstart
                     Marshal.WriteInt32(lParam, sel_End);//acpend
                     __result = (IntPtr)1;
                     goto Handled;
-                    //GetText
+                //Doc lock
+                case TF_LOCKED:
+                    __result = (IntPtr)1;
+                    goto Handled;
+                //Doc unlock
+                case TF_UNLOCKED:
+                    __result = (IntPtr)1;
+                    goto Handled;
+                //GetText
                 case TF_GETTEXTLENGTH:
                     Marshal.WriteInt32(lParam, ModEntry.textbox_h.text.Length);//textlen
                     __result = (IntPtr)1;
                     goto Handled;
                 case TF_GETTEXT:
-                    int len = (int)lParam;//textlen
+                    int len = (int)lParam;//max len
                     char[] _text = ModEntry.textbox_h.text.ToString().ToCharArray();
-                    Marshal.Copy(_text, 0, wParam, _text.Length);
+                    Marshal.Copy(_text, 0, wParam, Math.Min(len, _text.Length));
                     __result = (IntPtr)1;
                     goto Handled;
-                    //IMEs
+                //IMEs
                 case WM_IME_STARTCOMPOSITION:
+                    ModEntry.monitor.Log("StartComposition", StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_COMPOSITION:
+                    ModEntry.monitor.Log("UpdateComposition", StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_ENDCOMPOSITION:
+                    ModEntry.monitor.Log("EndComposition", StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_SETCONTEXT:
-                    __result = (IntPtr)1;
-                    goto Handled;
                 case WM_INPUTLANGCHANGE:
                     __result = (IntPtr)1;
                     goto Handled;

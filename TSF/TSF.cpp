@@ -1,3 +1,4 @@
+
 #include "TSF.h"
 #include "TextEdit.h"
 
@@ -12,6 +13,14 @@ TSF::TSF() {
 	Pin(DocMgr, ITfDocumentMgr*);
 	hr = mgr->CreateDocumentMgr(p_DocMgr);
 	CheckHr(hr, "Failed to create DocMgr");
+
+	Pin(KeyMgr, ITfKeystrokeMgr*);
+	hr = mgr->QueryInterface(IID_ITfKeystrokeMgr, (void**)p_KeyMgr);
+	CheckHr(hr, "Failed to query ITfKeystrokeMgr");
+
+	Pin(pump, ITfMessagePump*);
+	hr = mgr->QueryInterface(IID_ITfMessagePump, (void**)p_pump);
+	CheckHr(hr, "Failed to query ITfMessagePump");
 }
 
 TSF::~TSF()
@@ -112,4 +121,45 @@ void TSF::AssociateFocus(_Handle hwnd) {
 void TSF::TerminateComposition()
 {
 	services->TerminateComposition(NULL);//Passing Null to terminate all composition
+}
+
+void TSF::PumpMsg(_Handle hwnd)
+{
+	MSG msg;
+	BOOL    fResult = TRUE;
+	while (SUCCEEDED(pump->PeekMessage(&msg, ToHWND(hwnd), 0, 0, PM_REMOVE, &fResult)) && fResult) 
+	{
+		BOOL    fEaten;
+		if (WM_KEYDOWN == msg.message)
+		{
+			// does an ime want it?
+			if (KeyMgr->TestKeyDown(msg.wParam, msg.lParam, &fEaten) == S_OK && fEaten &&
+				KeyMgr->KeyDown(msg.wParam, msg.lParam, &fEaten) == S_OK && fEaten)
+			{
+				continue;
+			}
+		}
+		else if (WM_KEYUP == msg.message)
+		{
+			// does an ime want it?
+			if (KeyMgr->TestKeyUp(msg.wParam, msg.lParam, &fEaten) == S_OK && fEaten &&
+				KeyMgr->KeyUp(msg.wParam, msg.lParam, &fEaten) == S_OK && fEaten)
+			{
+				continue;
+			}
+		}
+
+		if (WM_QUIT == msg.message)
+		{
+			PostMessage(ToHWND(hwnd), msg.message, msg.wParam, msg.lParam);
+			return;
+		}
+
+		if (fResult)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	PostMessage(ToHWND(hwnd), WM_NULL, 0, 0);//Prevent window from waiting msg
 }

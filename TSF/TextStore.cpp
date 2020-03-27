@@ -1,5 +1,19 @@
 #include "TextEdit.h"
 
+#include <windows.h>
+#include <stdio.h>
+//#include <stdlib.h>
+#include <stdarg.h>
+
+#define IS_USE_OUTPUT_DEBUG_PRINT   1
+
+#if  IS_USE_OUTPUT_DEBUG_PRINT 
+
+#define  OUTPUT_DEBUG_PRINTF(str)  printf(str)
+#else 
+#define  OUTPUT_DEBUG_PRINTF(str) 
+#endif
+
 STDMETHODIMP TextEdit::AdviseSink(REFIID riid, IUnknown* punk, DWORD dwMask)
 {
     HRESULT     hr;
@@ -374,7 +388,6 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
             /*
             acpEnd will be -1 if all of the text up to the end is being requested.
             */
-
             if (acpEnd >= acpStart)
             {
                 cchReq = acpEnd - acpStart;
@@ -627,12 +640,12 @@ STDMETHODIMP TextEdit::RequestAttrsAtPosition(LONG acpPos, ULONG cFilterAttrs, c
 
 STDMETHODIMP TextEdit::RequestAttrsTransitioningAtPosition(LONG acpPos, ULONG cFilterAttrs, const TS_ATTRID* paFilterAttrs, DWORD dwFlags)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP TextEdit::FindNextAttrTransition(LONG acpStart, LONG acpHalt, ULONG cFilterAttrs, const TS_ATTRID* paFilterAttrs, DWORD dwFlags, LONG* pacpNext, BOOL* pfFound, LONG* plFoundOffset)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP TextEdit::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals, ULONG* pcFetched)
@@ -642,6 +655,7 @@ STDMETHODIMP TextEdit::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrV
 
 STDMETHODIMP TextEdit::GetEndACP(LONG* pacp)
 {
+    //OutputDebugString(TEXT("GetEndACP\n"));
     //does the caller have a lock
     if (!_IsLocked(TS_LF_READWRITE))
     {
@@ -654,11 +668,16 @@ STDMETHODIMP TextEdit::GetEndACP(LONG* pacp)
         return E_INVALIDARG;
     }
 
+    _GetCurrentSelection();
+
     *pacp = m_acpEnd;
+
+    return S_OK;
 }
 
 STDMETHODIMP TextEdit::GetActiveView(TsViewCookie* pvcView)
 {
+    //OutputDebugString(TEXT("GetActiveView\n"));
     //this app only supports one view, so this can be constant
     *pvcView = EDIT_VIEW_COOKIE;
 
@@ -672,6 +691,7 @@ STDMETHODIMP TextEdit::GetACPFromPoint(TsViewCookie vcView, const POINT* ptScree
 
 STDMETHODIMP TextEdit::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEnd, RECT* prc, BOOL* pfClipped)
 {
+    //OutputDebugString(TEXT("GetTextExt\n"));
     if (NULL == prc || NULL == pfClipped)
     {
         return E_INVALIDARG;
@@ -708,6 +728,7 @@ STDMETHODIMP TextEdit::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEn
 
 STDMETHODIMP TextEdit::GetScreenExt(TsViewCookie vcView, RECT* prc)
 {
+    //OutputDebugString(TEXT("GetScreenExt\n"));
     if (NULL == prc)
     {
         return E_INVALIDARG;
@@ -726,6 +747,7 @@ STDMETHODIMP TextEdit::GetScreenExt(TsViewCookie vcView, RECT* prc)
 
 STDMETHODIMP TextEdit::GetWnd(TsViewCookie vcView, HWND* phwnd)
 {
+    //OutputDebugString(TEXT("GetWnd\n"));
     if (EDIT_VIEW_COOKIE == vcView)
     {
         *phwnd = m_hWnd;
@@ -765,6 +787,7 @@ BOOL TextEdit::_LockDocument(DWORD dwLockFlags)
     m_fLocked = TRUE;
     m_dwLockType = dwLockFlags;
 
+    ::SendMessage(m_hWnd, TF_LOCKED, 0, dwLockFlags);
     return TRUE;
 }
 
@@ -789,6 +812,7 @@ void TextEdit::_UnlockDocument()
         m_fLayoutChanged = FALSE;
         m_AdviseSink.pTextStoreACPSink->OnLayoutChange(TS_LC_CHANGE, EDIT_VIEW_COOKIE);
     }
+    ::SendMessage(m_hWnd, TF_UNLOCKED, 0, 0);
 }
 
 BOOL TextEdit::_InternalLockDocument(DWORD dwLockFlags)
@@ -820,8 +844,7 @@ BOOL TextEdit::_GetCurrentSelection(void)
 
     return TRUE;
 }
-#define TF_GETTEXTLENGTH 0x060E
-#define TF_GETTEXT 0x060D
+
 HRESULT TextEdit::_GetText(LPWSTR* ppwsz, LPLONG pcch)
 {
     DWORD   cch;

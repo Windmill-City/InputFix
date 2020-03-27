@@ -101,6 +101,7 @@ STDMETHODIMP_(DWORD) TextEdit::Release(void)
 
 STDMETHODIMP TextEdit::OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk)
 {
+    OutputDebugString(TEXT("OnStartComposition\n"));
     *pfOk = TRUE;
     SendMessage(m_hWnd, WM_IME_STARTCOMPOSITION, 0, 0);
     return S_OK;
@@ -108,12 +109,14 @@ STDMETHODIMP TextEdit::OnStartComposition(ITfCompositionView* pComposition, BOOL
 
 STDMETHODIMP TextEdit::OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew)
 {
+    OutputDebugString(TEXT("OnUpdateComposition\n"));
     SendMessage(m_hWnd, WM_IME_COMPOSITION, 0, 0);
     return S_OK;
 }
 
 STDMETHODIMP TextEdit::OnEndComposition(ITfCompositionView* pComposition)
 {
+    OutputDebugString(TEXT("OnEndComposition\n"));
     SendMessage(m_hWnd, WM_IME_ENDCOMPOSITION,0,0);
     return S_OK;
 }

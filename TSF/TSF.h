@@ -41,6 +41,8 @@ REFCLASS TSF {
     ITfThreadMgr* mgr;
     ITfDocumentMgr* DocMgr;
     ITfContextOwnerCompositionServices* services;
+    ITfMessagePump* pump;
+    ITfKeystrokeMgr* KeyMgr;
 
     TfClientId id;
     ITfContext* context;
@@ -64,6 +66,7 @@ public:
     void SetCaretX(int x);
     void SetFocus();
     void AssociateFocus(_Handle);
+    void PumpMsg(_Handle hwnd);
 
     void TerminateComposition();
 };
