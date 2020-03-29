@@ -129,7 +129,7 @@ STDMETHODIMP TextEdit::OnEndComposition(ITfCompositionView* pComposition)
 
 void TextEdit::HandleComposition()
 {
-    wprintf(L"m_string:%ws\n", m_string.c_str());
+    DEBUG("m_string:%ws\n", m_string.c_str());
     //the text with underline
     ULONG comp_start = m_isStartComp && static_cast<LONG>(m_string.length()) > m_resultstart&& iswalpha(m_string[m_resultstart]) ? m_resultstart : -1;
     //comp text
@@ -149,7 +149,7 @@ void TextEdit::HandleComposition()
         range->GetText(editcookie, 0, text, 32, &pcch);
         text[pcch] = '\0';
         hr = attr_prop->GetValue(editcookie, range, &var);
-        wprintf(L"Text:%S£¬cch:%lu\n", text, pcch);
+        DEBUG("Text:%S£¬cch:%lu\n", text, pcch);
         if (pcch == 0)
             continue;
         if (SUCCEEDED(hr))
