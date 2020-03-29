@@ -21,22 +21,6 @@ namespace InputFix
         private const int WM_IME_ENDCOMPOSITION = 0x10E;
 
         private const int WM_INPUTLANGCHANGE = 81;
-
-        private const int WM_SETFOCUS = 0x0007;
-        private const int WM_KILLFOCUS = 0x0008;
-
-        private const int EM_REPLACESEL = 0x00C2;
-        private const int EM_SETSEL = 0x00B1;
-        private const int EM_GETSEL = 0x00B0;
-
-        private const int TF_GETTEXTLENGTH = 0x060E;
-        private const int TF_GETTEXT = 0x060D;
-        private const int TF_UNLOCKED = 0x60F;
-        private const int TF_LOCKED = 0x606;
-
-        private static string temptext;
-        private static int sel_Start;
-        private static int sel_End;
         public static bool KeyboardInput_HookProc(ref IntPtr __result, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr ___prevWndProc, ref IntPtr ___hIMC)
         {
             //ModEntry.monitor.Log("MSG:" + msg, StardewModdingAPI.LogLevel.Debug);
@@ -47,70 +31,32 @@ namespace InputFix
             }
             switch (msg)
             {
-                case EM_REPLACESEL:
-                    temptext = Marshal.PtrToStringAuto(lParam);
-                    ModEntry.monitor.Log("TempText:" + temptext, StardewModdingAPI.LogLevel.Debug);
-                    sel_End = sel_Start + temptext.Length;
-                    ModEntry.textbox_h.text.Length = sel_End;//Ensure len
-                    int k = 0;
-                    for (int i = sel_Start; i < sel_End; i++)
-                    {
-                        var ch = temptext[k];
-                        ModEntry.textbox_h.text[i] = ch;
-                        k++;
-                    }
-                    ModEntry.monitor.Log("AfterReplace:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
-                    __result = (IntPtr)1;
-                    goto Handled;
-                case EM_SETSEL:
-                    if ((int)wParam > (int)lParam)//if start > end, reverse it
-                    {
-                        sel_Start = (int)lParam;
-                        sel_End = (int)wParam;
-                    }
-                    else
-                    {
-                        sel_Start = (int)wParam;
-                        sel_End = (int)lParam;
-                    }
-                    ModEntry.monitor.Log("SetSelection:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
-
-                    ModEntry.textbox_h.text.Length = sel_End;//Ensure len
-                    __result = (IntPtr)1;
-                    goto Handled;
-                //GetSelection
-                case EM_GETSEL:
-                    ModEntry.monitor.Log("GetSelection:AcpStart:" + sel_Start + "AcpEnd:" + sel_End, StardewModdingAPI.LogLevel.Debug);
-                    Marshal.WriteInt32(wParam, sel_Start);//acpstart
-                    Marshal.WriteInt32(lParam, sel_End);//acpend
-                    __result = (IntPtr)1;
-                    goto Handled;
-                //Doc lock
-                case TF_LOCKED:
-                    __result = (IntPtr)1;
-                    goto Handled;
-                //Doc unlock
-                case TF_UNLOCKED:
-                    __result = (IntPtr)1;
-                    goto Handled;
-                //GetText
-                case TF_GETTEXTLENGTH:
-                    Marshal.WriteInt32(lParam, ModEntry.textbox_h.text.Length);//textlen
-                    __result = (IntPtr)1;
-                    goto Handled;
-                case TF_GETTEXT:
-                    int len = (int)lParam;//max len
-                    char[] _text = ModEntry.textbox_h.text.ToString().ToCharArray();
-                    Marshal.Copy(_text, 0, wParam, Math.Min(len, _text.Length));
-                    __result = (IntPtr)1;
-                    goto Handled;
                 //IMEs
                 case WM_IME_STARTCOMPOSITION:
                     ModEntry.monitor.Log("StartComposition", StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_COMPOSITION:
-                    ModEntry.monitor.Log("UpdateComposition", StardewModdingAPI.LogLevel.Debug);
+                    ModEntry.textbox_h.text.Clear();
+                    if ((int)lParam != -1)
+                    {
+                        var comp = Marshal.PtrToStringAuto(wParam);
+                        if((int)lParam == 1)//result
+                        {
+                            for(int i = 0; i < comp.Length; i++)
+                            {
+                                char ch = comp[i];
+                                Game1.keyboardDispatcher.Subscriber?.RecieveTextInput(ch);
+                            }
+                        }
+                        else//comp
+                        {
+                            ModEntry.textbox_h.text.Insert(0, comp);
+                        }
+                        ModEntry.monitor.Log("UpdateComposition:" + comp + "&" + (int)lParam, StardewModdingAPI.LogLevel.Debug);
+                    }
+                    else
+                        ModEntry.monitor.Log("UpdateComposition:HRESULT:" + (int)wParam, StardewModdingAPI.LogLevel.Debug);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_ENDCOMPOSITION:

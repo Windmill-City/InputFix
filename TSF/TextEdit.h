@@ -2,6 +2,13 @@
 
 #include <msctf.h>
 #include <olectl.h>
+#include <xstring>
+/*
+None of the GUIDs in TSATTRS.H are defined in a LIB, so you have to include
+INITGUID.H just before the first time you include TSATTRS.H
+*/
+#include <initguid.h>
+#include <tsattrs.h>
 
 /**************************************************************************
    global variables and definitions
@@ -25,7 +32,7 @@ typedef struct
    TextEdit class definition
 
 **************************************************************************/
-class TextEdit : public IUnknown, public ITextStoreACP, public ITfContextOwnerCompositionSink
+class TextEdit : public IUnknown, public ITextStoreACP, public ITfContextOwnerCompositionSink, public ITfDisplayAttributeNotifySink, public ITfUIElementSink
 {
 private:
 	DWORD                   m_ObjRefCount;
@@ -50,16 +57,25 @@ private:
 	TS_STATUS               m_status;
 	int                     m_caret_X;
 	BOOL                    m_fLayoutChanged;
+	//Text
+	std::wstring            m_string;
+	int                     m_resultstart;
+	BOOL                    m_isStartComp;
+	WCHAR                   m_lastchar;
 public:
-	//Composition
-	ITfCompositionView* m_composition;
-
+	TfEditCookie            editcookie;
+	ITfContext*             context;
+	ITfProperty*            attr_prop;
+	ITfCategoryMgr*			CategoryMgr;
+	ITfDisplayAttributeMgr* DispMgr;
 
 	TextEdit(HWND hWnd);
 	void ClearText();
 	void SetEnable(BOOL enable);
 	void SetTextBoxRect(int left, int top, int right, int bottom);
 	void SetCaret_X(int x);
+	//HandleComposition
+	void HandleComposition();
 
 	STDMETHOD(QueryInterface)(REFIID, LPVOID*);
 	STDMETHOD_(DWORD, AddRef)();
@@ -93,9 +109,15 @@ public:
 	STDMETHODIMP GetWnd(TsViewCookie vcView, HWND* phwnd);
 
 	// 通过 ITfContextOwnerCompositionSink 继承
-	STDMETHODIMP OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk) override;
-	STDMETHODIMP OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew) override;
-	STDMETHODIMP OnEndComposition(ITfCompositionView* pComposition) override;
+	STDMETHODIMP OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk);
+	STDMETHODIMP OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew);
+	STDMETHODIMP OnEndComposition(ITfCompositionView* pComposition);
+
+	// 通过 ITfTransitoryExtensionSink 继承
+	STDMETHODIMP OnTransitoryExtensionUpdated(ITfContext* pic, TfEditCookie ecReadOnly, ITfRange* pResultRange, ITfRange* pCompositionRange, BOOL* pfDeleteResultRange);
+
+	// 通过 ITfDisplayAttributeNotifySink 继承
+	STDMETHODIMP OnUpdateInfo(void);
 private:
 	//TextStoreSink
 	HRESULT _ClearAdviseSink(PADVISE_SINK pAdviseSink);
@@ -108,4 +130,9 @@ private:
 	//Selection
 	BOOL _GetCurrentSelection(void);
 	HRESULT _GetText(LPWSTR* ppwsz, LPLONG pcch = NULL);
+
+	// 通过 ITfUIElementSink 继承
+	virtual HRESULT __stdcall BeginUIElement(DWORD dwUIElementId, BOOL* pbShow) override;
+	virtual HRESULT __stdcall UpdateUIElement(DWORD dwUIElementId) override;
+	virtual HRESULT __stdcall EndUIElement(DWORD dwUIElementId) override;
 };

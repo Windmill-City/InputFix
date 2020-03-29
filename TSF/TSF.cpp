@@ -21,6 +21,26 @@ TSF::TSF() {
 	Pin(pump, ITfMessagePump*);
 	hr = mgr->QueryInterface(IID_ITfMessagePump, (void**)p_pump);
 	CheckHr(hr, "Failed to query ITfMessagePump");
+
+	Pin(CategoryMgr, ITfCategoryMgr*);
+	hr = CoCreateInstance(CLSID_TF_CategoryMgr,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_ITfCategoryMgr,
+		(void**)p_CategoryMgr);
+	CheckHr(hr, "Failed to query ITfCategoryMgr");
+
+	Pin(DispMgr, ITfDisplayAttributeMgr*);
+	hr = CoCreateInstance(CLSID_TF_DisplayAttributeMgr,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_ITfDisplayAttributeMgr,
+		(void**)p_DispMgr);
+	CheckHr(hr, "Failed to query ITfDisplayAttributeMgr");
+
+	Pin(UIMgr, ITfUIElementMgr*);
+	hr = mgr->QueryInterface(IID_ITfUIElementMgr, (void**)p_UIMgr);
+	CheckHr(hr, "Failed to query ITfUIElementMgr");
 }
 
 TSF::~TSF()
@@ -63,6 +83,19 @@ void TSF::CreateContext(_Handle ptr) {
 	Pin(EditCookie, TfEditCookie)
 	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
 	CheckHr(hr, "Failed to create Context");
+
+	edit->editcookie = EditCookie;
+	edit->context = context;
+	edit->DispMgr = DispMgr;
+	edit->CategoryMgr = CategoryMgr;
+	context->GetProperty(GUID_PROP_ATTRIBUTE, &edit->attr_prop);
+
+	ITfSource* source;
+	Pin(source, ITfSource*);
+	UIMgr->QueryInterface(IID_ITfSource, (void**)p_source);
+	Pin(attrcookie, DWORD);
+	source->AdviseSink(IID_ITfUIElementSink, edit, p_attrcookie);
+	source->Release();
 
 	Pin(services, ITfContextOwnerCompositionServices*);
 	hr = context->QueryInterface(IID_ITfContextOwnerCompositionServices, (void**)p_services);
@@ -157,6 +190,7 @@ void TSF::PumpMsg(_Handle hwnd)
 
 		if (fResult)
 		{
+
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}

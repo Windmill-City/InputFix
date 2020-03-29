@@ -43,6 +43,9 @@ REFCLASS TSF {
     ITfContextOwnerCompositionServices* services;
     ITfMessagePump* pump;
     ITfKeystrokeMgr* KeyMgr;
+    ITfCategoryMgr* CategoryMgr;
+    ITfDisplayAttributeMgr* DispMgr;
+    ITfUIElementMgr* UIMgr;
 
     TfClientId id;
     ITfContext* context;
@@ -50,6 +53,7 @@ REFCLASS TSF {
     TextEdit* edit;
 
     TfEditCookie EditCookie;
+    DWORD attrcookie;
 public:
     TSF();
     ~TSF();

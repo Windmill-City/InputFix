@@ -1,19 +1,5 @@
 #include "TextEdit.h"
 
-#include <windows.h>
-#include <stdio.h>
-//#include <stdlib.h>
-#include <stdarg.h>
-
-#define IS_USE_OUTPUT_DEBUG_PRINT   1
-
-#if  IS_USE_OUTPUT_DEBUG_PRINT 
-
-#define  OUTPUT_DEBUG_PRINTF(str)  printf(str)
-#else 
-#define  OUTPUT_DEBUG_PRINTF(str) 
-#endif
-
 STDMETHODIMP TextEdit::AdviseSink(REFIID riid, IUnknown* punk, DWORD dwMask)
 {
     HRESULT     hr;
@@ -199,6 +185,13 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
 
 STDMETHODIMP TextEdit::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch, LONG* pacpResultStart, LONG* pacpResultEnd)
 {
+    if (acpTestStart < 0
+        || acpTestStart > acpTestEnd
+        || acpTestEnd > static_cast<LONG>(m_string.length()))
+    {
+        return  E_INVALIDARG;
+    }
+
     *pacpResultStart = acpTestStart;
     *pacpResultEnd = acpTestEnd;
     return S_OK;
@@ -240,16 +233,8 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
         return E_INVALIDARG;
     }
 
-    _GetCurrentSelection();
-
-    //find out which end of the selection the caret (insertion point) is
-    POINT   pt;
-    LRESULT lPos;
-    GetCaretPos(&pt);
-    lPos = ::SendMessage(m_hWnd, EM_POSFROMCHAR, m_acpStart, 0);
-
     //if the caret position is the same as the start character, then the selection end is the start of the selection
-    m_ActiveSelEnd = ((pt.x == LOWORD(lPos) && pt.y == HIWORD(lPos)) ? TS_AE_START : TS_AE_END);
+    m_ActiveSelEnd = m_acpStart == m_acpEnd ? TS_AE_NONE : m_acpStart < m_acpEnd ? TS_AE_END : TS_AE_START;
 
     pSelection[0].acpStart = m_acpStart;
     pSelection[0].acpEnd = m_acpEnd;
@@ -295,6 +280,10 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
         return TS_E_NOLOCK;
     }
 
+    if (static_cast<size_t>(pSelection->acpEnd) > m_string.length()) {
+        return E_INVALIDARG;
+    }
+
     m_acpStart = pSelection[0].acpStart;
     m_acpEnd = pSelection[0].acpEnd;
     m_fInterimChar = pSelection[0].style.fInterimChar;
@@ -313,22 +302,6 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
         m_ActiveSelEnd = pSelection[0].style.ase;
     }
 
-    //if the selection end is at the start of the selection, reverse the parameters
-    LONG    lStart = m_acpStart;
-    LONG    lEnd = m_acpEnd;
-
-    if (TS_AE_START == m_ActiveSelEnd)
-    {
-        lStart = m_acpEnd;
-        lEnd = m_acpStart;
-    }
-
-    m_fNotify = FALSE;
-
-    ::SendMessage(m_hWnd, EM_SETSEL, lStart, lEnd);
-
-    m_fNotify = TRUE;
-
     return S_OK;
 }
 
@@ -343,7 +316,7 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
 
     BOOL    fDoText = cchPlainReq > 0;
     BOOL    fDoRunInfo = cRunInfoReq > 0;
-    LONG    cchTotal;
+    LONG    cchTotal = static_cast<LONG>(m_string.length());
     HRESULT hr = E_FAIL;
 
     if (pcchPlainRet)
@@ -359,14 +332,6 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
     if (pacpNext)
     {
         *pacpNext = acpStart;
-    }
-
-    //get all of the text
-    LPWSTR  pwszText;
-    hr = _GetText(&pwszText, &cchTotal);
-    if (FAILED(hr))
-    {
-        return hr;
     }
 
     //validate the start pos
@@ -404,13 +369,9 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
                     cchReq = cchPlainReq;
                 }
 
-                //extract the specified text range
-                LPWSTR  pwszStart = pwszText + acpStart;
-
                 if (pchPlain && cchPlainReq)
                 {
-                    //the text output is not NULL terminated
-                    CopyMemory(pchPlain, pwszStart, cchReq * sizeof(WCHAR));
+                    m_string.copy(pchPlain, cchReq, acpStart);
                 }
             }
 
@@ -472,8 +433,6 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
             hr = S_OK;
         }
     }
-
-    GlobalFree(pwszText);
 
     return hr;
 }
@@ -562,8 +521,6 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
     LONG    acpOldEnd;
     LONG    acpNewEnd;
 
-    _GetCurrentSelection();
-
     acpOldEnd = m_acpEnd;
 
     //set the start point after the insertion
@@ -579,30 +536,8 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
         return S_OK;
     }
 
-    LPWSTR  pchCopy;
-
-    pchCopy = (LPWSTR)GlobalAlloc(GMEM_FIXED, (cch + 1) * sizeof(WCHAR));
-    if (NULL == pchCopy)
-    {
-        return E_OUTOFMEMORY;
-    }
-
-    //pwszText will most likely not be NULL terminated
-    CopyMemory(pchCopy, pchText, cch * sizeof(WCHAR));
-    pchCopy[cch] = 0;
-
-    //don't notify TSF of text and selection changes when in response to a TSF action
-    m_fNotify = FALSE;
-
-    //insert the text
-    ::SendMessage(m_hWnd, EM_REPLACESEL, TRUE, (LPARAM)pchCopy);
-
-    //set the selection
-    ::SendMessage(m_hWnd, EM_SETSEL, acpStart, acpNewEnd);
-
-    m_fNotify = TRUE;
-
-    _GetCurrentSelection();
+    m_string.erase(acpStart, acpOldEnd - acpStart);
+    m_string.insert(acpStart, pchText, cch);
 
     if (!(dwFlags & TS_IAS_NOQUERY))
     {
@@ -614,8 +549,6 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
     pChange->acpStart = acpStart;
     pChange->acpOldEnd = acpOldEnd;
     pChange->acpNewEnd = acpNewEnd;
-
-    GlobalFree(pchCopy);
 
     //defer the layout change notification until the document is unlocked
     m_fLayoutChanged = TRUE;
@@ -630,12 +563,12 @@ STDMETHODIMP TextEdit::InsertEmbeddedAtSelection(DWORD dwFlags, IDataObject* pDa
 
 STDMETHODIMP TextEdit::RequestSupportedAttrs(DWORD dwFlags, ULONG cFilterAttrs, const TS_ATTRID* paFilterAttrs)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP TextEdit::RequestAttrsAtPosition(LONG acpPos, ULONG cFilterAttrs, const TS_ATTRID* paFilterAttrs, DWORD dwFlags)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP TextEdit::RequestAttrsTransitioningAtPosition(LONG acpPos, ULONG cFilterAttrs, const TS_ATTRID* paFilterAttrs, DWORD dwFlags)
@@ -650,7 +583,7 @@ STDMETHODIMP TextEdit::FindNextAttrTransition(LONG acpStart, LONG acpHalt, ULONG
 
 STDMETHODIMP TextEdit::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals, ULONG* pcFetched)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP TextEdit::GetEndACP(LONG* pacp)
@@ -667,8 +600,6 @@ STDMETHODIMP TextEdit::GetEndACP(LONG* pacp)
     {
         return E_INVALIDARG;
     }
-
-    _GetCurrentSelection();
 
     *pacp = m_acpEnd;
 
@@ -734,8 +665,6 @@ STDMETHODIMP TextEdit::GetScreenExt(TsViewCookie vcView, RECT* prc)
         return E_INVALIDARG;
     }
 
-    ZeroMemory(prc, sizeof(RECT));
-
     if (EDIT_VIEW_COOKIE != vcView)
     {
         return E_INVALIDARG;
@@ -787,7 +716,7 @@ BOOL TextEdit::_LockDocument(DWORD dwLockFlags)
     m_fLocked = TRUE;
     m_dwLockType = dwLockFlags;
 
-    ::SendMessage(m_hWnd, TF_LOCKED, 0, dwLockFlags);
+    SendMessage(m_hWnd, TF_LOCKED, 0, dwLockFlags);
     return TRUE;
 }
 
@@ -812,7 +741,7 @@ void TextEdit::_UnlockDocument()
         m_fLayoutChanged = FALSE;
         m_AdviseSink.pTextStoreACPSink->OnLayoutChange(TS_LC_CHANGE, EDIT_VIEW_COOKIE);
     }
-    ::SendMessage(m_hWnd, TF_UNLOCKED, 0, 0);
+    SendMessage(m_hWnd, TF_UNLOCKED, 0, 0);
 }
 
 BOOL TextEdit::_InternalLockDocument(DWORD dwLockFlags)
