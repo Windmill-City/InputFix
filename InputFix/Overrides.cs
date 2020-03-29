@@ -78,23 +78,26 @@ namespace InputFix
             return false;
         }
 
-        public static void TextBox_Selected(TextBox __instance, string ____text, bool ____selected)
+        public static void Subscriber_Set()
         {
-            if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber == __instance && ____selected)
+            if (Game1.gameMode != 6)//cant change input state during loading,or the game will struck
             {
-                ModEntry.textbox_h.enableInput(true);
-                ModEntry.textbox_h.SetTextBox(__instance);
-                ModEntry.tsf.TerminateComposition();
-                ModEntry.tsf.ClearText();
-                ModEntry.textbox_h.text.Clear();
+                if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber is TextBox)
+                {
+                    ModEntry.textbox_h.enableInput(true);
+                    ModEntry.textbox_h.SetTextBox((TextBox)Game1.keyboardDispatcher.Subscriber);
+                    ModEntry.tsf.TerminateComposition();
+                    ModEntry.tsf.ClearText();
+                    ModEntry.textbox_h.text.Clear();
 
-            }
-            else if (Game1.keyboardDispatcher.Subscriber == null)
-            {
-                ModEntry.textbox_h.enableInput(false);
-                ModEntry.tsf.TerminateComposition();
-                ModEntry.tsf.ClearText();
-                ModEntry.textbox_h.text.Clear();
+                }
+                else
+                {
+                    ModEntry.textbox_h.enableInput(false);
+                    ModEntry.tsf.TerminateComposition();
+                    ModEntry.tsf.ClearText();
+                    ModEntry.textbox_h.text.Clear();
+                }
             }
         }
         public static void TextBox_Text(TextBox __instance, string ____text)
@@ -105,6 +108,14 @@ namespace InputFix
                 ModEntry.textbox_h.SetCaretX((int)length + 16);
             }
 
+        }
+
+        public static void ChatTextBox_CaretUpdate(ChatTextBox __instance, float ___currentWidth)
+        {
+            if (__instance == ModEntry.textbox_h.current)
+            {
+                ModEntry.textbox_h.SetCaretX((int)___currentWidth + 16);
+            }
         }
 
         public static void DrawComposition(Game1 __instance)

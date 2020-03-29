@@ -24,24 +24,28 @@ namespace InputFix
         public override void Entry(IModHelper helper)
         {
             monitor = this.Monitor;
+
             tsf = new TSF();
             tsf.AssociateFocus(Game1.game1.Window.Handle);
 
             textbox_h = new TextBoxHelper(tsf, Game1.game1.Window.Handle);
-
+            
             HarmonyInstance harmony = HarmonyInstance.Create(base.ModManifest.UniqueID);
-
+            
             MethodInfo m_HookProc = typeof(KeyboardInput).GetMethod("HookProc", BindingFlags.NonPublic | BindingFlags.Static);
             harmony.Patch(m_HookProc, new HarmonyMethod(typeof(Overrides), "KeyboardInput_HookProc"));
-
-            MethodInfo m_selected = typeof(TextBox).GetMethod("set_Selected", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_selected, null, new HarmonyMethod(typeof(Overrides), "TextBox_Selected"));
+            
+            MethodInfo m_selected = typeof(KeyboardDispatcher).GetMethod("set_Subscriber", BindingFlags.Public | BindingFlags.Instance);
+            harmony.Patch(m_selected, null, new HarmonyMethod(typeof(Overrides), "Subscriber_Set"));
 
             MethodInfo m_text = typeof(TextBox).GetMethod("set_Text", BindingFlags.Public | BindingFlags.Instance);
             harmony.Patch(m_text, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
 
+            MethodInfo m_caret = typeof(ChatTextBox).GetMethod("updateWidth", BindingFlags.Public | BindingFlags.Instance);
+            harmony.Patch(m_caret, null, new HarmonyMethod(typeof(Overrides), "ChatTextBox_CaretUpdate"));
+
             MethodInfo m_draw = typeof(Game1).GetMethod("drawOverlays", BindingFlags.NonPublic | BindingFlags.Instance);
-            harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition"));
+            harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition")); 
 
 
             FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
