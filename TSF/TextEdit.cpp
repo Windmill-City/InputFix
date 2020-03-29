@@ -131,7 +131,7 @@ void TextEdit::HandleComposition()
 {
     wprintf(L"m_string:%ws\n", m_string.c_str());
     //the text with underline
-    ULONG comp_start = m_isStartComp ? m_resultstart : -1;
+    ULONG comp_start = m_isStartComp && static_cast<LONG>(m_string.length()) > m_resultstart&& iswalpha(m_string[m_resultstart]) ? m_resultstart : -1;
     //comp text
     WCHAR* text = new WCHAR[32];
 
@@ -149,7 +149,9 @@ void TextEdit::HandleComposition()
         range->GetText(editcookie, 0, text, 32, &pcch);
         text[pcch] = '\0';
         hr = attr_prop->GetValue(editcookie, range, &var);
-        printf("Text:%S\n", text);
+        wprintf(L"Text:%S£¬cch:%lu\n", text, pcch);
+        if (pcch == 0)
+            continue;
         if (SUCCEEDED(hr))
         {
             if (VT_I4 == var.vt)
@@ -238,6 +240,8 @@ void TextEdit::HandleComposition()
                 SendMessage(m_hWnd, WM_IME_COMPOSITION, (WPARAM)result, 1);
                 GlobalFree(result);
             }
+            else
+                SendMessage(m_hWnd, WM_IME_COMPOSITION, hr, -1);//clear comp
         }
     }
     else

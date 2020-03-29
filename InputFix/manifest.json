@@ -2,7 +2,7 @@
   "Name": "InputFix",
   "Author": "Windmill_City",
   "Version": "1.0.0",
-  "Description": "Fix inputmethod crash problem",
+  "Description": "Fix IME crash problem",
   "UniqueID": "Windmill_City.InputFix",
   "EntryDll": "InputFix.dll",
   "MinimumApiVersion": "3.1.0",

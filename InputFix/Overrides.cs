@@ -21,6 +21,8 @@ namespace InputFix
         private const int WM_IME_ENDCOMPOSITION = 0x10E;
 
         private const int WM_INPUTLANGCHANGE = 81;
+
+        private const int WM_KILLFOCUS = 0x008;
         public static bool KeyboardInput_HookProc(ref IntPtr __result, IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr ___prevWndProc, ref IntPtr ___hIMC)
         {
             //ModEntry.monitor.Log("MSG:" + msg, StardewModdingAPI.LogLevel.Debug);
@@ -31,9 +33,12 @@ namespace InputFix
             }
             switch (msg)
             {
+                case WM_KILLFOCUS:
+                    ModEntry.tsf.TerminateComposition();
+                    break;
                 //IMEs
                 case WM_IME_STARTCOMPOSITION:
-                    ModEntry.monitor.Log("StartComposition", StardewModdingAPI.LogLevel.Debug);
+                    ModEntry.monitor.Log("StartComposition", StardewModdingAPI.LogLevel.Trace);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_COMPOSITION:
@@ -53,14 +58,14 @@ namespace InputFix
                         {
                             ModEntry.textbox_h.text.Insert(0, comp);
                         }
-                        ModEntry.monitor.Log("UpdateComposition:" + comp + "&" + (int)lParam, StardewModdingAPI.LogLevel.Debug);
+                        ModEntry.monitor.Log("UpdateComposition:" + comp + "&" + (int)lParam, StardewModdingAPI.LogLevel.Trace);
                     }
                     else
-                        ModEntry.monitor.Log("UpdateComposition:HRESULT:" + (int)wParam, StardewModdingAPI.LogLevel.Debug);
+                        ModEntry.monitor.Log("UpdateComposition:HRESULT:" + (int)wParam, StardewModdingAPI.LogLevel.Trace);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_ENDCOMPOSITION:
-                    ModEntry.monitor.Log("EndComposition", StardewModdingAPI.LogLevel.Debug);
+                    ModEntry.monitor.Log("EndComposition", StardewModdingAPI.LogLevel.Trace);
                     __result = (IntPtr)1;
                     goto Handled;
                 case WM_IME_SETCONTEXT:
@@ -81,6 +86,7 @@ namespace InputFix
                 ModEntry.textbox_h.SetTextBox(__instance);
                 ModEntry.tsf.TerminateComposition();
                 ModEntry.tsf.ClearText();
+                ModEntry.textbox_h.text.Clear();
 
             }
             else if (Game1.keyboardDispatcher.Subscriber == null)
@@ -88,6 +94,7 @@ namespace InputFix
                 ModEntry.textbox_h.enableInput(false);
                 ModEntry.tsf.TerminateComposition();
                 ModEntry.tsf.ClearText();
+                ModEntry.textbox_h.text.Clear();
             }
         }
         public static void TextBox_Text(TextBox __instance, string ____text)

@@ -10,6 +10,15 @@ INITGUID.H just before the first time you include TSATTRS.H
 #include <initguid.h>
 #include <tsattrs.h>
 
+#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG(x,...) wprintf(x,__VA_ARGS__);
+#else
+#define DEBUG(x)
+#endif // DEBUG
+
+
 /**************************************************************************
    global variables and definitions
 **************************************************************************/
