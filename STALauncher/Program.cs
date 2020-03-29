@@ -17,6 +17,8 @@ namespace STALauncher
             SHFILEINFO shinfo = new SHFILEINFO();
             Win32.SHGetFileInfo("StardewModdingAPI.exe", 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), Win32.SHGFI_ICON | Win32.SHGFI_LARGEICON);
             Win32.SendMessage(Win32.FindWindow(null, Console.Title), 0x0080, (IntPtr)0, shinfo.hIcon);
+            Win32.SendMessage(Win32.FindWindow(null, Console.Title), 0x0080, (IntPtr)1, shinfo.hIcon);
+            Win32.SendMessage(Win32.FindWindow(null, Console.Title), 0x0080, (IntPtr)2, shinfo.hIcon);
             Type program = Type.GetType("StardewModdingAPI.Program, " + "StardewModdingAPI", false);
             MethodInfo main = program.GetMethod("Main", BindingFlags.Public | BindingFlags.Static);
             main.Invoke(null, new object[] { args });
