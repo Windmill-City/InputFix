@@ -3,6 +3,7 @@
 #include "TextEdit.h"
 
 TSF::TSF() {
+	CoUninitialize();//Unsafe!!,just a trick to use TSF in a MTA Thread
 	HRESULT hr = CoInitialize(NULL);//A STA Thread is required or TSF wont work
 	CheckHr(hr,"Failed to CoInitialize, need to run at a STA Thread");
 
