@@ -16,8 +16,7 @@ namespace STALauncher
         {
             SHFILEINFO shinfo = new SHFILEINFO();
             Win32.SHGetFileInfo("StardewModdingAPI.exe", 0, ref shinfo, (uint)Marshal.SizeOf(shinfo), Win32.SHGFI_ICON | Win32.SHGFI_LARGEICON);
-            Icon myIcon = Icon.FromHandle(shinfo.hIcon);
-            Win32.SetConsoleIcon(myIcon.Handle);
+            Win32.SendMessage(Win32.FindWindow(null, Console.Title), 0x0080, (IntPtr)0, shinfo.hIcon);
             Type program = Type.GetType("StardewModdingAPI.Program, " + "StardewModdingAPI", false);
             MethodInfo main = program.GetMethod("Main", BindingFlags.Public | BindingFlags.Static);
             main.Invoke(null, new object[] { args });
@@ -48,5 +47,9 @@ namespace STALauncher
         public static extern uint ExtractIconEx(string lpszFile, int nIconIndex, int[] phiconLarge, int[] phiconSmall, uint nIcons);
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool SetConsoleIcon(IntPtr hIcon);
+        [DllImport("User32.dll", EntryPoint = "SendMessage")]
+        public static extern IntPtr SendMessage(int hWnd, int msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("User32.dll", EntryPoint = "FindWindow")]
+        public static extern int FindWindow(string lpClassName, string lpWindowName);
     }
 }
