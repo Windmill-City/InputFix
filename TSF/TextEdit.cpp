@@ -192,7 +192,7 @@ void TextEdit::HandleComposition()
         }
     }
     VariantClear(&var);
-    if (static_cast<LONG>(m_string.length()) > m_resultstart && m_string[m_resultstart] == m_lastchar) {
+    if (static_cast<LONG>(m_string.length()) == m_resultstart + 1 && m_string[m_resultstart] == m_lastchar) {
         comp_start = m_resultstart;
     }
     m_lastchar = text[0];

@@ -46,9 +46,9 @@ namespace InputFix
                     if ((int)lParam != -1)
                     {
                         var comp = Marshal.PtrToStringAuto(wParam);
-                        if((int)lParam == 1)//result
+                        if ((int)lParam == 1)//result
                         {
-                            for(int i = 0; i < comp.Length; i++)
+                            for (int i = 0; i < comp.Length; i++)
                             {
                                 char ch = comp[i];
                                 Game1.keyboardDispatcher.Subscriber?.RecieveTextInput(ch);

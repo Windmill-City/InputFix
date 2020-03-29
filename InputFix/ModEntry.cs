@@ -29,12 +29,12 @@ namespace InputFix
             tsf.AssociateFocus(Game1.game1.Window.Handle);
 
             textbox_h = new TextBoxHelper(tsf, Game1.game1.Window.Handle);
-            
+
             HarmonyInstance harmony = HarmonyInstance.Create(base.ModManifest.UniqueID);
-            
+
             MethodInfo m_HookProc = typeof(KeyboardInput).GetMethod("HookProc", BindingFlags.NonPublic | BindingFlags.Static);
             harmony.Patch(m_HookProc, new HarmonyMethod(typeof(Overrides), "KeyboardInput_HookProc"));
-            
+
             MethodInfo m_selected = typeof(KeyboardDispatcher).GetMethod("set_Subscriber", BindingFlags.Public | BindingFlags.Instance);
             harmony.Patch(m_selected, null, new HarmonyMethod(typeof(Overrides), "Subscriber_Set"));
 
@@ -45,7 +45,7 @@ namespace InputFix
             harmony.Patch(m_caret, null, new HarmonyMethod(typeof(Overrides), "ChatTextBox_CaretUpdate"));
 
             MethodInfo m_draw = typeof(Game1).GetMethod("drawOverlays", BindingFlags.NonPublic | BindingFlags.Instance);
-            harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition")); 
+            harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition"));
 
 
             FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -123,7 +123,7 @@ namespace InputFix
             if (_enable && !text.Equals(""))
             {
                 Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
-                Game1.spriteBatch.DrawString(font, text, new Vector2(X + Caret_X + 6f, Y + 12f), Color.Gray);
+                Game1.spriteBatch.DrawString(font, text, new Vector2(X + Caret_X + 6f, Y + 12f), Color.Gray, 0, Vector2.Zero, 1f, SpriteEffects.None, 1.0f);
                 Game1.spriteBatch.End();
             }
         }
