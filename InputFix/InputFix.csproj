@@ -63,6 +63,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>F:\SteamLibrary\steamapps\common\Stardew Valley\smapi-internal\0Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="ChatCommands">
+      <HintPath>F:\SteamLibrary\steamapps\common\Stardew Valley\Mods\ChatCommands\ChatCommands.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />

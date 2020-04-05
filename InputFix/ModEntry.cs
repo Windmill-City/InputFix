@@ -52,6 +52,23 @@ namespace InputFix
             Type type = host.GetValue(Game1.game1).GetType();
             MethodInfo m_idle = type.GetMethod("ApplicationIdle", BindingFlags.NonPublic | BindingFlags.Instance);
             harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ModEntry), "HandleMsgFirst"));
+
+            //compatible with ChatCommands
+            if (this.Helper.ModRegistry.Get("cat.chatcommands") != null)
+            {
+                monitor.Log("Compatible with ChatCommands", LogLevel.Info);
+                Type CCTB = typeof(ChatCommands.ChatCommandsMod).Assembly.GetType("ChatCommands.ClassReplacements.CommandChatTextBox");
+                if (CCTB != null)
+                {
+                    monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
+                    MethodInfo m_draw2 = CCTB.GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
+                    harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"), new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawEnd"));
+                }
+                else
+                {
+                    monitor.Log("CommandChatTextBox NOT FOUND", LogLevel.Error);
+                }
+            }
         }
 
         private static void HandleMsgFirst()

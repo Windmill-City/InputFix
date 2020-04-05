@@ -1,10 +1,16 @@
 ﻿{
   "Name": "InputFix",
   "Author": "Windmill_City",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Description": "Fix IME crash problem",
   "UniqueID": "Windmill_City.InputFix",
   "EntryDll": "InputFix.dll",
   "MinimumApiVersion": "3.1.0",
-  "UpdateKeys": []
+  "UpdateKeys": [ "Nexus:5693" ],
+  "Dependencies": [
+    {
+      "UniqueID": "cat.chatcommands",
+      "IsRequired": false
+    }
+  ]
 }

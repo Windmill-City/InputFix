@@ -77,10 +77,12 @@ namespace InputFix
         Handled:
             return false;
         }
-
+        static bool DuringDraw = false;
         public static void Subscriber_Set()
         {
-            if (Game1.gameMode != 6)//cant change input state during loading,or the game will struck
+            if (Game1.gameMode != 6
+                && !DuringDraw//compatible with CommandChatTextBox
+                )//cant change input state during loading,or the game will struck
             {
                 if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber is TextBox)
                 {
@@ -121,6 +123,16 @@ namespace InputFix
         public static void DrawComposition(Game1 __instance)
         {
             ModEntry.textbox_h.drawComposition();
+        }
+
+        public static void CommandChatTextBoxDrawStart()
+        {
+            DuringDraw = true;
+        }
+
+        public static void CommandChatTextBoxDrawEnd()
+        {
+            DuringDraw = false;
         }
     }
 }
