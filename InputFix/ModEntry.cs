@@ -57,17 +57,7 @@ namespace InputFix
             if (this.Helper.ModRegistry.Get("cat.chatcommands") != null)
             {
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
-                Type CCTB = typeof(ChatCommands.ChatCommandsMod).Assembly.GetType("ChatCommands.ClassReplacements.CommandChatTextBox");
-                if (CCTB != null)
-                {
-                    monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
-                    MethodInfo m_draw2 = CCTB.GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
-                    harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"), new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawEnd"));
-                }
-                else
-                {
-                    monitor.Log("CommandChatTextBox NOT FOUND", LogLevel.Error);
-                }
+                Compatible.PatchChatCommands(monitor, harmony);
             }
         }
 
