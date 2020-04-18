@@ -185,15 +185,18 @@ STDMETHODIMP TextEdit::GetStatus(TS_STATUS* pdcs)
 
 STDMETHODIMP TextEdit::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch, LONG* pacpResultStart, LONG* pacpResultEnd)
 {
-    if (acpTestStart < 0
-        || acpTestStart > acpTestEnd
-        || acpTestEnd > static_cast<LONG>(m_string.length()))
-    {
-        return  E_INVALIDARG;
-    }
+    ACP* Acp = new ACP();
+    Acp->acpEnd = acpTestEnd;
+    Acp->acpStart = acpTestStart;
 
-    *pacpResultStart = acpTestStart;
-    *pacpResultEnd = acpTestEnd;
+    m_fNotify = false;
+
+    SendMessage(m_hWnd, TF_QUERYINSERT, (WPARAM)Acp, (LPARAM)cch);
+
+    m_fNotify = true;
+
+    *pacpResultStart = Acp->acpStart;
+    *pacpResultEnd = Acp->acpEnd;
     return S_OK;
 }
 
@@ -233,8 +236,10 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
         return E_INVALIDARG;
     }
 
+    _GetCurrentSelection();
+
     //if the caret position is the same as the start character, then the selection end is the start of the selection
-    m_ActiveSelEnd = m_acpStart == m_acpEnd ? TS_AE_NONE : m_acpStart < m_acpEnd ? TS_AE_END : TS_AE_START;
+    m_ActiveSelEnd = m_acpStart == m_acpEnd ? TS_AE_NONE : m_acpStart < m_acpEnd ? TS_AE_START : TS_AE_END;
 
     pSelection[0].acpStart = m_acpStart;
     pSelection[0].acpEnd = m_acpEnd;
@@ -280,10 +285,6 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
         return TS_E_NOLOCK;
     }
 
-    if (static_cast<size_t>(pSelection->acpEnd) > m_string.length()) {
-        return E_INVALIDARG;
-    }
-
     m_acpStart = pSelection[0].acpStart;
     m_acpEnd = pSelection[0].acpEnd;
     m_fInterimChar = pSelection[0].style.fInterimChar;
@@ -302,21 +303,37 @@ STDMETHODIMP TextEdit::SetSelection(ULONG ulCount, const TS_SELECTION_ACP* pSele
         m_ActiveSelEnd = pSelection[0].style.ase;
     }
 
+    //if the selection end is at the start of the selection, reverse the parameters
+    LONG    lStart = m_acpStart;
+    LONG    lEnd = m_acpEnd;
+
+    if (TS_AE_START == m_ActiveSelEnd)
+    {
+        lStart = m_acpEnd;
+        lEnd = m_acpStart;
+    }
+
+    m_fNotify = FALSE;
+
+    ::SendMessage(m_hWnd, EM_SETSEL, lStart, lEnd);
+
+    m_fNotify = TRUE;
+
     return S_OK;
 }
 
 STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULONG cchPlainReq, ULONG* pcchPlainRet, TS_RUNINFO* prgRunInfo, ULONG cRunInfoReq, ULONG* pcRunInfoRet, LONG* pacpNext)
 {
-    // does the caller have a lock
-        if (!_IsLocked(TS_LF_READ))
-        {
-            //the caller doesn't have a lock
-            return TS_E_NOLOCK;
-        }
+    //does the caller have a lock
+    if (!_IsLocked(TS_LF_READ))
+    {
+        //the caller doesn't have a lock
+        return TS_E_NOLOCK;
+    }
 
     BOOL    fDoText = cchPlainReq > 0;
     BOOL    fDoRunInfo = cRunInfoReq > 0;
-    LONG    cchTotal = static_cast<LONG>(m_string.length());
+    LONG    cchTotal;
     HRESULT hr = E_FAIL;
 
     if (pcchPlainRet)
@@ -326,12 +343,20 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
 
     if (fDoRunInfo)
     {
-        *pcRunInfoRet = 0;
+        *pcchPlainRet = 0;
     }
 
     if (pacpNext)
     {
         *pacpNext = acpStart;
+    }
+
+    //get all of the text
+    LPWSTR  pwszText;
+    hr = _GetText(&pwszText, &cchTotal);
+    if (FAILED(hr))
+    {
+        return hr;
     }
 
     //validate the start pos
@@ -353,6 +378,7 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
             /*
             acpEnd will be -1 if all of the text up to the end is being requested.
             */
+
             if (acpEnd >= acpStart)
             {
                 cchReq = acpEnd - acpStart;
@@ -369,9 +395,13 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
                     cchReq = cchPlainReq;
                 }
 
+                //extract the specified text range
+                LPWSTR  pwszStart = pwszText + acpStart;
+
                 if (pchPlain && cchPlainReq)
                 {
-                    m_string.copy(pchPlain, cchReq, acpStart);
+                    //the text output is not NULL terminated
+                    CopyMemory(pchPlain, pwszStart, cchReq * sizeof(WCHAR));
                 }
             }
 
@@ -420,7 +450,7 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
                 If there were multiple runs, it would be an error to have consecuative runs
                 of the same type.
                 */
-                * pcRunInfoRet = 1;
+                * pcchPlainRet = 1;
                 prgRunInfo[0].type = TS_RT_PLAIN;
                 prgRunInfo[0].uCount = cchReq;
             }
@@ -433,6 +463,8 @@ STDMETHODIMP TextEdit::GetText(LONG acpStart, LONG acpEnd, WCHAR* pchPlain, ULON
             hr = S_OK;
         }
     }
+
+    GlobalFree(pwszText);
 
     return hr;
 }
@@ -536,8 +568,30 @@ STDMETHODIMP TextEdit::InsertTextAtSelection(DWORD dwFlags, const WCHAR* pchText
         return S_OK;
     }
 
-    m_string.erase(acpStart, acpOldEnd - acpStart);
-    m_string.insert(acpStart, pchText, cch);
+    LPWSTR  pwszCopy;
+
+    pwszCopy = (LPWSTR)GlobalAlloc(GMEM_FIXED, (cch + 1) * sizeof(WCHAR));
+    if (NULL == pwszCopy)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    //pwszText will most likely not be NULL terminated
+    CopyMemory(pwszCopy, pchText, cch * sizeof(WCHAR));
+    pwszCopy[cch] = 0;
+
+    //don't notify TSF of text and selection changes when in response to a TSF action
+    m_fNotify = FALSE;
+
+    //insert the text
+    ::SendMessage(m_hWnd, EM_REPLACESEL, TRUE, (LPARAM)pwszCopy);
+
+    //set the selection
+    ::SendMessage(m_hWnd, EM_SETSEL, acpStart, acpNewEnd);
+
+    m_fNotify = TRUE;
+
+    _GetCurrentSelection();
 
     if (!(dwFlags & TS_IAS_NOQUERY))
     {
@@ -601,6 +655,8 @@ STDMETHODIMP TextEdit::GetEndACP(LONG* pacp)
         return E_INVALIDARG;
     }
 
+    _GetCurrentSelection();
+
     *pacp = m_acpEnd;
 
     return S_OK;
@@ -648,12 +704,11 @@ STDMETHODIMP TextEdit::GetTextExt(TsViewCookie vcView, LONG acpStart, LONG acpEn
     {
         return E_INVALIDARG;
     }
-    prc->left = m_rectTextBox.left + m_caret_X;
-    prc->right = m_rectTextBox.right;
-    prc->top = m_rectTextBox.top;
-    prc->bottom = m_rectTextBox.bottom;
+    ACP* acp = new ACP();
+    acp->acpEnd = acpEnd;
+    acp->acpStart = acpStart;
+    *pfClipped = SendMessage(m_hWnd, TF_GETTEXTEXT, (WPARAM)prc, (LPARAM)acp);
 
-    MapWindowPoints(m_hWnd, NULL, (LPPOINT)prc, 2);
 	return S_OK;
 }
 
@@ -781,7 +836,7 @@ HRESULT TextEdit::_GetText(LPWSTR* ppwsz, LPLONG pcch)
 
     *ppwsz = NULL;
 
-    SendMessage(m_hWnd, TF_GETTEXTLENGTH, 0, (LPARAM)&cch);
+    cch = _GetTextLength();
     pwszText = (LPWSTR)GlobalAlloc(GMEM_FIXED, (cch + 1) * sizeof(WCHAR));
     if (NULL == pwszText)
     {
@@ -798,4 +853,9 @@ HRESULT TextEdit::_GetText(LPWSTR* ppwsz, LPLONG pcch)
     }
 
     return S_OK;
+}
+
+ULONG TextEdit::_GetTextLength()
+{
+    return SendMessage(m_hWnd, TF_GETTEXTLENGTH, 0, 0);
 }

@@ -7,7 +7,7 @@ namespace InputFix
 {
     public class Compatible
     {
-        
+
         public static void PatchChatCommands(IMonitor monitor, HarmonyInstance harmony)
         {
             Type CCTB = getByFullName("ChatCommands.ClassReplacements.CommandChatTextBox");
@@ -15,7 +15,7 @@ namespace InputFix
             {
                 monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
                 MethodInfo m_draw2 = CCTB.GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"), new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawEnd"));
+                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"));
             }
             else
             {

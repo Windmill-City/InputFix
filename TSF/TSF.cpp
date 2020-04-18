@@ -122,22 +122,23 @@ void TSF::ReleaseContext() {
 		edit->Release();
 }
 
-void TSF::SetTextExt(int left, int right, int top, int bottom) {
-	edit->SetTextBoxRect(left, right, top, bottom);
-}
-
 void TSF::SetEnable(bool enable) {
 	edit->SetEnable(enable);
+}
+
+void TSF::onTextChange()
+{
+	edit->onTextChange();
+}
+
+void TSF::onSelChange()
+{
+	edit->onSelChange();
 }
 
 void TSF::ClearText()
 {
 	edit->ClearText();
-}
-
-void TSF::SetCaretX(int x)
-{
-	edit->SetCaret_X(x);
 }
 
 void TSF::SetFocus() {

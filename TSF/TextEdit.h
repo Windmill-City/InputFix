@@ -25,10 +25,13 @@ INITGUID.H just before the first time you include TSATTRS.H
 
 #define EDIT_VIEW_COOKIE    0
 
-#define TF_UNLOCKED      0x60F
-#define TF_LOCKED      0x606
+#define TF_UNLOCKED		    0x060F
+#define TF_LOCKED           0x0606
 #define TF_GETTEXTLENGTH    0x060E
 #define TF_GETTEXT          0x060D
+#define TF_CLEARTEXT        0x060C
+#define TF_GETTEXTEXT       0x060B
+#define TF_QUERYINSERT      0x060A
 
 typedef struct
 {
@@ -36,6 +39,11 @@ typedef struct
 	ITextStoreACPSink* pTextStoreACPSink;
 	DWORD                   dwMask;
 }ADVISE_SINK, * PADVISE_SINK;
+typedef struct
+{
+    LONG acpStart;
+    LONG acpEnd;
+}ACP,*PACP;
 /**************************************************************************
 
    TextEdit class definition
@@ -47,10 +55,10 @@ private:
 	DWORD                   m_ObjRefCount;
 
 	HWND                    m_hWnd;
-	RECT                    m_rectTextBox;
 	//TextStore
 	LONG                    m_acpStart;
 	LONG                    m_acpEnd;
+	ULONG                   m_cchOldLength;
 	BOOL                    m_fInterimChar;
 	TsActiveSelEnd          m_ActiveSelEnd;
 	//TextStoreSink
@@ -64,13 +72,7 @@ private:
 	DWORD                   m_dwInternalLockType;
 	//TextBox
 	TS_STATUS               m_status;
-	int                     m_caret_X;
 	BOOL                    m_fLayoutChanged;
-	//Text
-	std::wstring            m_string;
-	int                     m_resultstart;
-	BOOL                    m_isStartComp;
-	WCHAR                   m_lastchar;
 public:
 	TfEditCookie            editcookie;
 	ITfContext*             context;
@@ -79,12 +81,10 @@ public:
 	ITfDisplayAttributeMgr* DispMgr;
 
 	TextEdit(HWND hWnd);
-	void ClearText();
+	BOOL ClearText();
+	void onTextChange();
+	void onSelChange();
 	void SetEnable(BOOL enable);
-	void SetTextBoxRect(int left, int top, int right, int bottom);
-	void SetCaret_X(int x);
-	//HandleComposition
-	void HandleComposition();
 
 	STDMETHOD(QueryInterface)(REFIID, LPVOID*);
 	STDMETHOD_(DWORD, AddRef)();
@@ -139,6 +139,8 @@ private:
 	//Selection
 	BOOL _GetCurrentSelection(void);
 	HRESULT _GetText(LPWSTR* ppwsz, LPLONG pcch = NULL);
+	//TextBox
+	ULONG _GetTextLength();
 
 	// Í¨¹ý ITfUIElementSink ¼Ì³Ð
 	virtual HRESULT __stdcall BeginUIElement(DWORD dwUIElementId, BOOL* pbShow) override;

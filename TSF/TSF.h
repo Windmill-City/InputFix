@@ -64,10 +64,10 @@ public:
     void PushContext();
     void PopContext();
     void ReleaseContext();
-    void SetTextExt(int left, int right, int top, int bottom);
     void SetEnable(bool enable);
     void ClearText();
-    void SetCaretX(int x);
+    void onTextChange();
+    void onSelChange();
     void SetFocus();
     void AssociateFocus(_Handle);
     void PumpMsg(_Handle hwnd);

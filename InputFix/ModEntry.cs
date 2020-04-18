@@ -25,6 +25,8 @@ namespace InputFix
         {
             monitor = this.Monitor;
 
+            RegCommand(helper);
+
             tsf = new TSF();
             tsf.AssociateFocus(Game1.game1.Window.Handle);
 
@@ -41,11 +43,14 @@ namespace InputFix
             MethodInfo m_text = typeof(TextBox).GetMethod("set_Text", BindingFlags.Public | BindingFlags.Instance);
             harmony.Patch(m_text, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
 
-            MethodInfo m_caret = typeof(ChatTextBox).GetMethod("updateWidth", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_caret, null, new HarmonyMethod(typeof(Overrides), "ChatTextBox_CaretUpdate"));
+            MethodInfo m_draw = typeof(TextBox).GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
+            harmony.Patch(m_draw, new HarmonyMethod(typeof(Overrides), "Draw"));
 
-            MethodInfo m_draw = typeof(Game1).GetMethod("drawOverlays", BindingFlags.NonPublic | BindingFlags.Instance);
-            harmony.Patch(m_draw, null, new HarmonyMethod(typeof(Overrides), "DrawComposition"));
+            MethodInfo m_draw2 = typeof(ChatTextBox).GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
+            harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "Draw"));
+
+            MethodInfo m_emoji = typeof(ChatTextBox).GetMethod("receiveEmoji", BindingFlags.Public | BindingFlags.Instance);
+            harmony.Patch(m_emoji, new HarmonyMethod(typeof(Overrides), "receiveEmoji"));
 
 
             FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -54,11 +59,88 @@ namespace InputFix
             harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ModEntry), "HandleMsgFirst"));
 
             //compatible with ChatCommands
-            if (this.Helper.ModRegistry.Get("cat.chatcommands") != null)
+            if (Helper.ModRegistry.Get("cat.chatcommands") != null)
             {
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
                 Compatible.PatchChatCommands(monitor, harmony);
             }
+        }
+
+        private void RegCommand(IModHelper helper)
+        {
+            helper.ConsoleCommands.Add("animal_textbox", "Open animal naming textbox", new Action<string, string[]>((res1, res2) =>
+            {
+                if (!Game1.debugMode)
+                    return;
+                if (Game1.gameMode != 3)
+                {
+                    monitor.Log("Not In Playing Mode", LogLevel.Error);
+                    return;
+                }
+                FarmAnimal animal = new FarmAnimal();
+                Game1.activeClickableMenu = new AnimalQueryMenu(animal);
+                monitor.Log("Open Succeed", LogLevel.Info);
+            }));
+            helper.ConsoleCommands.Add("naming_textbox", "Open normal naming textbox", new Action<string, string[]>((res1, res2) =>
+            {
+                if (!Game1.debugMode)
+                    return;
+                if (Game1.gameMode != 3)
+                {
+                    monitor.Log("Not In Playing Mode", LogLevel.Error);
+                    return;
+                }
+                if (res2.Length > 0)
+                    Game1.activeClickableMenu = new NamingMenu(new NamingMenu.doneNamingBehavior(new Action<string>((name) =>
+                    {
+                        monitor.Log(name, LogLevel.Info);
+                        Game1.activeClickableMenu = null;
+                    })),
+                        Game1.content.LoadString("Strings\\Characters:NameYourHorse"), Game1.content.LoadString("Strings\\Characters:DefaultHorseName"));
+                else
+                    Game1.activeClickableMenu = new NamingMenu(new NamingMenu.doneNamingBehavior(new Action<string>((name) =>
+                    {
+                        monitor.Log(name, LogLevel.Info);
+                        Game1.activeClickableMenu = null;
+                    })), Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1236"), Game1.player.IsMale ? (Game1.player.catPerson ? Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1794") : Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1795")) : (Game1.player.catPerson ? Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1796") : Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1797")));
+                monitor.Log("Open Succeed", LogLevel.Info);
+            }));
+            helper.ConsoleCommands.Add("numsel_textbox", "Open number selection textbox", new Action<string, string[]>((res1, res2) =>
+            {
+                if (!Game1.debugMode)
+                    return;
+                if (Game1.gameMode != 3)
+                {
+                    monitor.Log("Not In Playing Mode", LogLevel.Error);
+                    return;
+                }
+                Game1.activeClickableMenu = new NumberSelectionMenu(Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1774"),
+                    new NumberSelectionMenu.behaviorOnNumberSelect(new Action<int, int, Farmer>((var1, var2, var3) =>
+                    {
+                        monitor.Log(var1.ToString(), LogLevel.Info);
+                    })), 50, 0, 999, 0);
+                monitor.Log("Open Succeed", LogLevel.Info);
+            }));
+            helper.ConsoleCommands.Add("textbox", "Open textbox", new Action<string, string[]>((res1, res2) =>
+            {
+                if (!Game1.debugMode)
+                    return;
+                if (Game1.gameMode != 3)
+                {
+                    ModEntry.monitor.Log("Not In Playing Mode", LogLevel.Error);
+                    return;
+                }
+                Game1.game1.parseDebugInput("warp AnimalShop");
+                Game1.activeClickableMenu = new PurchaseAnimalsMenu(Utility.getPurchaseAnimalStock());
+                monitor.Log("Open Succeed", LogLevel.Info);
+            }));
+            helper.ConsoleCommands.Add("inputfix_debug", "Set debug", new Action<string, string[]>((res1, res2) =>
+            {
+                Game1.debugMode = !Game1.debugMode;
+                Program.releaseBuild = !Game1.debugMode;
+                string str = String.Format("Debug:{0}", Game1.debugMode);
+                monitor.Log(str, LogLevel.Info);
+            }));
         }
 
         private static void HandleMsgFirst()
@@ -72,14 +154,12 @@ namespace InputFix
         TSF tsf;
         public bool _enable = false;
 
-        SpriteFont font;
-        Color textColor;
-        int Caret_X = 0;
-        int X = 0;
-        int Y = 0;
+        public SpriteFont font;
+        public int X = 0;
+        public int Y = 0;
+        public int ACP_Start = 0;
+        public int ACP_End = 0;
         public TextBox current;
-
-        public StringBuilder text = new StringBuilder(32);
         public TextBoxHelper(TSF _tsf, IntPtr _hWnd)
         {
             tsf = _tsf;
@@ -93,27 +173,50 @@ namespace InputFix
             current = textBox;
             X = current.X;
             Y = current.Y;
-            font = current.Font;
-            textColor = current.TextColor;
-            SetTextExt(X, X + current.Width, Y, Y + current.Height);
-            var length = current.Font.MeasureString(current.Text).X;
-            SetCaretX((int)length + 16);
+            font = current is ChatTextBox ? ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode) : current.Font;
+            resetAcp();
         }
 
-        public void SetCaretX(int x)
+        public int getTextLen()
         {
-            Caret_X = x;
-            tsf.SetCaretX(x);
+            if (current is ChatTextBox)
+            {
+                int len = 0;
+                foreach (ChatSnippet item in ((ChatTextBox)ModEntry.textbox_h.current).finalText)
+                {
+                    len += item.emojiIndex != -1 ? 1 : item.message.Length;
+                }
+                return len;
+            }
+            else
+                return current.Text.Length;
+        }
+
+        public string getText()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            if (current is ChatTextBox)
+            {
+                foreach (ChatSnippet item in ((ChatTextBox)ModEntry.textbox_h.current).finalText)
+                {
+                    stringBuilder.Append(item.emojiIndex != -1 ? "符" : item.message);
+                }
+                return stringBuilder.ToString();
+            }
+            else
+                return current.Text;
+        }
+
+        public void resetAcp()
+        {
+            ModEntry.textbox_h.ACP_Start = ModEntry.textbox_h.ACP_End = getTextLen();
+            tsf.onTextChange();
+            tsf.onSelChange();
         }
 
         public void SetFont(SpriteFont _font)
         {
             font = _font;
-        }
-
-        public void SetTextExt(int left, int right, int top, int bottom)
-        {
-            tsf.SetTextExt(left, right, top, bottom);
         }
 
         public void enableInput(bool enable)
@@ -122,16 +225,6 @@ namespace InputFix
             {
                 _enable = enable;
                 tsf.SetEnable(enable);
-            }
-        }
-
-        public void drawComposition()
-        {
-            if (_enable && !text.Equals(""))
-            {
-                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
-                Game1.spriteBatch.DrawString(font, text, new Vector2(X + Caret_X + 6f, Y + 12f), Color.Gray, 0, Vector2.Zero, 1f, SpriteEffects.None, 1.0f);
-                Game1.spriteBatch.End();
             }
         }
 
