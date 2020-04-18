@@ -16,6 +16,7 @@ namespace InputFix
         public static TSF tsf;
         public static IMonitor monitor;
         public static TextBoxHelper textbox_h;
+        public static IModHelper _helper;
         /*********
         ** Public methods
         *********/
@@ -24,8 +25,11 @@ namespace InputFix
         public override void Entry(IModHelper helper)
         {
             monitor = this.Monitor;
+            _helper = helper;
 
             RegCommand(helper);
+
+            helper.Events.GameLoop.UpdateTicked += Overrides.HandleMouseClick;
 
             tsf = new TSF();
             tsf.AssociateFocus(Game1.game1.Window.Handle);

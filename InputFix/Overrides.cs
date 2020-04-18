@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
 using System;
@@ -490,6 +492,101 @@ namespace InputFix
                     ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start + ModEntry.textbox_h.current.Text.Length - temp;
                     ModEntry.monitor.Log("After Set ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
                 }
+            }
+        }
+
+        public static void HandleMouseClick(object sender, UpdateTickedEventArgs e)
+        {
+            if (!ModEntry.textbox_h._enable || !(ModEntry._helper.Input.GetState(SButton.MouseLeft) == SButtonState.Pressed))
+            {
+                return;
+            }
+            ICursorPosition cursor = ModEntry._helper.Input.GetCursorPosition();
+            if (((cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
+                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
+                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
+                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height)
+                || (cursor.ScreenPixels.X > ModEntry.textbox_h.current.X
+                && cursor.ScreenPixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
+                && cursor.ScreenPixels.Y > ModEntry.textbox_h.current.Y
+                && cursor.ScreenPixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height))
+                )
+            {
+                float mouse_x = (cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
+                                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
+                                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
+                                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height) ?
+                cursor.AbsolutePixels.X : cursor.ScreenPixels.X;
+                if (ModEntry.textbox_h.current is ChatTextBox)
+                {
+                    ChatTextBox chat = ModEntry.textbox_h.current as ChatTextBox;
+                    float width = 12f + ModEntry.textbox_h.X;
+                    if (mouse_x < width)
+                        ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = 0;
+                    else if (mouse_x > chat.currentWidth + width)
+                    {
+                        ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = ModEntry.textbox_h.getTextLen();
+                    }
+                    else
+                    {
+                        int acp = 0;
+                        foreach (ChatSnippet item in chat.finalText)
+                        {
+                            width += item.myLength;
+                            acp += item.emojiIndex != -1 ? 1 : item.message.Length;
+                            if (width > mouse_x)
+                            {
+                                if (item.emojiIndex != -1)
+                                {
+                                    ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = acp + ((width - item.myLength / 2) > mouse_x ? -1 : 0);
+                                }
+                                else
+                                {
+                                    for (int i = item.message.Length - 1; i >= 0; i--)
+                                    {
+                                        var char_x = ModEntry.textbox_h.font.MeasureString(item.message[i].ToString()).X;
+                                        width -= char_x;
+                                        if (width < mouse_x)
+                                        {
+                                            ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = acp + ((width + char_x / 2) > mouse_x ? -1 : 0);
+                                            break;
+                                        }
+                                        acp--;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var text = ModEntry.textbox_h.getText();
+                    float width = 16f + ModEntry.textbox_h.X;
+                    if (mouse_x < width)
+                        ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = 0;
+                    else if (mouse_x > ModEntry.textbox_h.font.MeasureString(text).X + width)
+                    {
+                        ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = ModEntry.textbox_h.getTextLen();
+                    }
+                    else
+                    {
+                        int acp = 0;
+                        for (int i = 0; i < text.Length; i++)
+                        {
+                            var char_x = ModEntry.textbox_h.font.MeasureString(text[i].ToString()).X;
+                            width += char_x;
+                            if (width > mouse_x)
+                            {
+                                ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = acp + ((width - char_x / 2) > mouse_x ? 0 : 1);
+                                break;
+                            }
+                            acp++;
+                        }
+                    }
+                }
+                ModEntry.monitor.Log("LeftClick Set Acp:" + ModEntry.textbox_h.ACP_Start, LogLevel.Trace);
+                ModEntry.tsf.onSelChange();
             }
         }
 

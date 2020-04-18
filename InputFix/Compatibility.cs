@@ -22,6 +22,9 @@ namespace InputFix
 
                 MethodInfo m_load = CCTB.GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
                 harmony.Patch(m_load, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
+
+                MethodInfo m_reset = CCTB.GetMethod("Reset", BindingFlags.Public | BindingFlags.Instance);
+                harmony.Patch(m_reset, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
             }
             else
             {
