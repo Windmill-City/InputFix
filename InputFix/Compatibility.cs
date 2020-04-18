@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace InputFix
 {
-    public class Compatible
+    public class Compatibility
     {
 
         public static void PatchChatCommands(IMonitor monitor, HarmonyInstance harmony)
@@ -16,6 +16,12 @@ namespace InputFix
                 monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
                 MethodInfo m_draw2 = CCTB.GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
                 harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"));
+
+                MethodInfo m_emoji = CCTB.GetMethod("ReceiveEmoji", BindingFlags.Public | BindingFlags.Instance);
+                harmony.Patch(m_emoji, new HarmonyMethod(typeof(Overrides), "receiveEmoji"));
+
+                MethodInfo m_load = CCTB.GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
+                harmony.Patch(m_load, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
             }
             else
             {

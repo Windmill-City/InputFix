@@ -74,7 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compatible.cs" />
+    <Compile Include="Compatibility.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Overrides.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

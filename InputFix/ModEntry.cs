@@ -62,7 +62,7 @@ namespace InputFix
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
             {
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
-                Compatible.PatchChatCommands(monitor, harmony);
+                Compatibility.PatchChatCommands(monitor, harmony);
             }
         }
 

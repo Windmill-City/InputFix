@@ -312,10 +312,13 @@ namespace InputFix
                         goto Handled;
                     //SetTextBox
                     case WM_SETTEXTBOX:
-                        ModEntry.monitor.Log("Set Enable", StardewModdingAPI.LogLevel.Trace);
-                        ModEntry.textbox_h.enableInput(true);
-                        ModEntry.monitor.Log("Set TextBox", StardewModdingAPI.LogLevel.Trace);
-                        ModEntry.textbox_h.SetTextBox((TextBox)Game1.keyboardDispatcher.Subscriber);
+                        if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber is TextBox)
+                        {
+                            ModEntry.monitor.Log("Set Enable", StardewModdingAPI.LogLevel.Trace);
+                            ModEntry.textbox_h.enableInput(true);
+                            ModEntry.monitor.Log("Set TextBox", StardewModdingAPI.LogLevel.Trace);
+                            ModEntry.textbox_h.SetTextBox((TextBox)Game1.keyboardDispatcher.Subscriber);
+                        }
                         goto Handled;
                     //KillFocus
                     case WM_KILLFOCUS:
@@ -367,7 +370,7 @@ namespace InputFix
                 }
             }
         }
-        public static void TextBox_Text(TextBox __instance, string ____text)
+        public static void TextBox_Text(TextBox __instance)
         {
             if (__instance == ModEntry.textbox_h.current && notify)
             {
@@ -654,6 +657,10 @@ namespace InputFix
                             0.99f);
                         xPositionSoFar += item.myLength;
                     }
+                }
+                if (!caretDrawed && caretVisible)
+                {
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar + 12f), __instance.Y + 12, 4, 32), __instance.TextColor);
                 }
             }
             else
