@@ -29,7 +29,7 @@ namespace InputFix
 
             RegCommand(helper);
 
-            helper.Events.GameLoop.UpdateTicked += Overrides.HandleMouseClick;
+            helper.Events.GameLoop.UpdateTicked += Overrides.HandleMouseEvents;
 
             tsf = new TSF();
             tsf.AssociateFocus(Game1.game1.Window.Handle);

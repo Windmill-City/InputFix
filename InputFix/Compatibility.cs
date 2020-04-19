@@ -25,6 +25,12 @@ namespace InputFix
 
                 MethodInfo m_reset = CCTB.GetMethod("Reset", BindingFlags.Public | BindingFlags.Instance);
                 harmony.Patch(m_reset, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
+
+                MethodInfo m_leftarrow = CCTB.GetMethod("OnLeftArrowPress", BindingFlags.Public | BindingFlags.Instance);
+                harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxOnArrow"));
+
+                MethodInfo m_rightarrow = CCTB.GetMethod("OnRightArrowPress", BindingFlags.Public | BindingFlags.Instance);
+                harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxOnArrow"));
             }
             else
             {

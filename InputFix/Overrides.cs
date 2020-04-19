@@ -419,11 +419,12 @@ namespace InputFix
                                     }
                                     else
                                     {
+                                        //acp selection may cross snippet, dont out of range
                                         int len = Math.Min(ModEntry.textbox_h.ACP_End - ModEntry.textbox_h.ACP_Start, item.message.Length);
                                         item.message = item.message.Remove(ModEntry.textbox_h.ACP_Start - (index - item.message.Length), len);
                                         ModEntry.textbox_h.ACP_End -= len;
                                         index -= len;
-                                        if (item.message == "")
+                                        if (item.message.Length == 0)//empty, remove it
                                         {
                                             chat.finalText.RemoveAt(i);
                                             i--;
@@ -457,7 +458,7 @@ namespace InputFix
                     chat.updateWidth();
                     int index = 0;
                     ChatSnippet chatSnippet = new ChatSnippet(replace, LocalizedContentManager.CurrentLanguageCode);
-                    if (chatSnippet.myLength + chat.currentWidth >= chat.Width - 16)
+                    if (chatSnippet.myLength + chat.currentWidth >= 830)
                     {
                         ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start;
                         ModEntry.monitor.Log("Full ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
@@ -467,13 +468,13 @@ namespace InputFix
                     {
                         ChatSnippet item = chat.finalText[i];
                         index += item.emojiIndex != -1 ? 1 : item.message.Length;
-                        if (index >= ModEntry.textbox_h.ACP_Start && item.emojiIndex == -1)
+                        if (index >= ModEntry.textbox_h.ACP_Start && item.emojiIndex == -1)//[text  [caret > ]   message][ = caret (index)]
                         {
                             item.message = item.message.Insert(ModEntry.textbox_h.ACP_Start - (index - item.message.Length), chatSnippet.message);
                             item.myLength += chatSnippet.myLength;
                             goto Final;
                         }
-                        else if (index > ModEntry.textbox_h.ACP_Start)
+                        else if (index > ModEntry.textbox_h.ACP_Start)//[nothing/emoji][caret here][emoji(now index is here, larger than caret pos)]
                         {
                             chat.finalText.Insert(i, chatSnippet);
                             goto Final;
@@ -483,45 +484,45 @@ namespace InputFix
                 Final:
                     ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start + chatSnippet.message.Length;
                     chat.updateWidth();
-                    ModEntry.monitor.Log("After Set ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
                 }
                 else
                 {
                     var temp = ModEntry.textbox_h.current.Text.Length;
                     ModEntry.textbox_h.current.Text = ModEntry.textbox_h.current.Text.Insert(ModEntry.textbox_h.ACP_Start, replace);
                     ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start + ModEntry.textbox_h.current.Text.Length - temp;
-                    ModEntry.monitor.Log("After Set ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
                 }
+                ModEntry.monitor.Log("After Set ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
             }
         }
 
-        public static void HandleMouseClick(object sender, UpdateTickedEventArgs e)
+        public static void HandleMouseEvents(object sender, UpdateTickedEventArgs e)
         {
             if (!ModEntry.textbox_h._enable || !(ModEntry._helper.Input.GetState(SButton.MouseLeft) == SButtonState.Pressed))
             {
                 return;
             }
             ICursorPosition cursor = ModEntry._helper.Input.GetCursorPosition();
-            if (((cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
-                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
-                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
-                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height)
-                || (cursor.ScreenPixels.X > ModEntry.textbox_h.current.X
+            bool ScreenPixels = (cursor.ScreenPixels.X > ModEntry.textbox_h.current.X
                 && cursor.ScreenPixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
                 && cursor.ScreenPixels.Y > ModEntry.textbox_h.current.Y
-                && cursor.ScreenPixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height))
-                )
+                && cursor.ScreenPixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height);
+            /*
+            bool AbsolutePixels = (cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
+                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
+                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
+                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height);
+            */
+            if (ScreenPixels /*|| AbsolutePixels*/)
             {
-                float mouse_x = (cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
-                                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
-                                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
-                                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height) ?
-                cursor.AbsolutePixels.X : cursor.ScreenPixels.X;
+                //float mouse_x = ScreenPixels ? cursor.ScreenPixels.X : cursor.AbsolutePixels.X;
+                float mouse_x = cursor.ScreenPixels.X;
                 if (ModEntry.textbox_h.current is ChatTextBox)
                 {
                     ChatTextBox chat = ModEntry.textbox_h.current as ChatTextBox;
                     float width = 12f + ModEntry.textbox_h.X;
-                    if (mouse_x < width)
+                    if (mouse_x > 835)//emoji menu icon
+                        return;
+                    else if (mouse_x < width)
                         ModEntry.textbox_h.ACP_End = ModEntry.textbox_h.ACP_Start = 0;
                     else if (mouse_x > chat.currentWidth + width)
                     {
@@ -596,6 +597,7 @@ namespace InputFix
                 return true;
 
             bool caretVisible = DateTime.UtcNow.Millisecond % 1000 >= 500;
+            //draw background
             if (____textBoxTexture != null)
             {
                 spriteBatch.Draw(____textBoxTexture, new Rectangle(__instance.X, __instance.Y, 16, __instance.Height), new Rectangle?(new Rectangle(0, 0, 16, __instance.Height)), Color.White);
@@ -606,11 +608,12 @@ namespace InputFix
             {
                 Game1.drawDialogueBox(__instance.X - 32, __instance.Y - 112 + 10, __instance.Width + 80, __instance.Height, false, true, null, false, true, -1, -1, -1);
             }
+            //draw text
             if (__instance is ChatTextBox)
             {
                 ChatTextBox chat = __instance as ChatTextBox;
 
-                float xPositionSoFar = 0f;
+                float xPositionSoFar = 12f;
 
                 int index = 0;
                 bool caretDrawed = false;
@@ -625,7 +628,7 @@ namespace InputFix
                         if (item.emojiIndex != -1)
                         {
                             spriteBatch.Draw(ChatBox.emojiTexture,
-                                new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                                new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                                 new Rectangle?(new Rectangle(
                                     item.emojiIndex * 9 % ChatBox.emojiTexture.Width,
                                     item.emojiIndex * 9 / ChatBox.emojiTexture.Width * 9,
@@ -643,7 +646,7 @@ namespace InputFix
                         {
                             spriteBatch.DrawString(ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode),
                                 item.message,
-                                new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                                new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                                 ChatMessage.getColorFromName(Game1.player.defaultChatColor),
                                 0f, Vector2.Zero,
                                 1f,
@@ -653,23 +656,24 @@ namespace InputFix
                         }
                         if (caretVisible)
                         {
-                            spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar + 12f), __instance.Y + 12, 4, 32), __instance.TextColor);
+                            spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar), __instance.Y + 12, 4, 32), __instance.TextColor);
                         }
                         xPositionSoFar += 4;
                         caretDrawed = true;
                         continue;
                     }
-                    else if (index > ModEntry.textbox_h.ACP_Start && !caretDrawed)
+                    else if (index > ModEntry.textbox_h.ACP_Start && !caretDrawed)//[text  [caret]  message]
                     {
-                        if (item.message != null && ModEntry.textbox_h.ACP_Start - (index - item.message.Length) >= 0)
+                        if (item.message != null)
                         {
+                            //seperate str
                             var sep_str1 = new ChatSnippet(item.message.Substring(0, ModEntry.textbox_h.ACP_Start - (index - item.message.Length)), LocalizedContentManager.CurrentLanguageCode);
                             var sep_str2 = new ChatSnippet(item.message.Substring(ModEntry.textbox_h.ACP_Start - (index - item.message.Length)), LocalizedContentManager.CurrentLanguageCode);
                             if (sep_str1.message != null)
                             {
                                 spriteBatch.DrawString(ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode),
                                     sep_str1.message,
-                                    new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                                    new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                                     ChatMessage.getColorFromName(Game1.player.defaultChatColor),
                                     0f, Vector2.Zero,
                                     1f,
@@ -680,14 +684,15 @@ namespace InputFix
 
                             if (caretVisible)
                             {
-                                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar + 12f), __instance.Y + 12, 4, 32), __instance.TextColor);
+                                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar), __instance.Y + 12, 4, 32), __instance.TextColor);
                             }
                             xPositionSoFar += 4;
+
                             if (sep_str2.message != null)
                             {
                                 spriteBatch.DrawString(ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode),
                                     sep_str2.message,
-                                    new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                                    new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                                     ChatMessage.getColorFromName(Game1.player.defaultChatColor),
                                     0f, Vector2.Zero,
                                     1f,
@@ -700,13 +705,13 @@ namespace InputFix
                         {
                             if (caretVisible)
                             {
-                                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar + 12f), __instance.Y + 12, 4, 32), __instance.TextColor);
+                                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar), __instance.Y + 12, 4, 32), __instance.TextColor);
                             }
                             xPositionSoFar += 4;
                             if (item.emojiIndex != -1)
                             {
                                 spriteBatch.Draw(ChatBox.emojiTexture,
-                                    new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                                    new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                                     new Rectangle?(new Rectangle(
                                         item.emojiIndex * 9 % ChatBox.emojiTexture.Width,
                                         item.emojiIndex * 9 / ChatBox.emojiTexture.Width * 9,
@@ -728,7 +733,7 @@ namespace InputFix
                     if (item.emojiIndex != -1)
                     {
                         spriteBatch.Draw(ChatBox.emojiTexture,
-                            new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                            new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                             new Rectangle?(new Rectangle(
                                 item.emojiIndex * 9 % ChatBox.emojiTexture.Width,
                                 item.emojiIndex * 9 / ChatBox.emojiTexture.Width * 9,
@@ -746,7 +751,7 @@ namespace InputFix
                     {
                         spriteBatch.DrawString(ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode),
                             item.message,
-                            new Vector2(__instance.X + xPositionSoFar + 12f, __instance.Y + 12),
+                            new Vector2(__instance.X + xPositionSoFar, __instance.Y + 12),
                             ChatMessage.getColorFromName(Game1.player.defaultChatColor),
                             0f, Vector2.Zero,
                             1f,
@@ -757,35 +762,40 @@ namespace InputFix
                 }
                 if (!caretDrawed && caretVisible)
                 {
-                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar + 12f), __instance.Y + 12, 4, 32), __instance.TextColor);
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)(xPositionSoFar), __instance.Y + 12, 4, 32), __instance.TextColor);
                 }
             }
             else
             {
                 string toDraw = __instance.PasswordBox ? new string('*', __instance.Text.Length) : __instance.Text;
-                var sep_str1 = toDraw.Substring(0, Math.Min(ModEntry.textbox_h.ACP_Start, toDraw.Length));
-                var sep_str2 = toDraw.Substring(Math.Min(ModEntry.textbox_h.ACP_Start, toDraw.Length));
+
+                int offset = __instance.X + 16;
+
+                var sep_str1 = toDraw.Substring(0,ModEntry.textbox_h.ACP_Start);
+                var sep_str2 = toDraw.Substring(ModEntry.textbox_h.ACP_Start);
                 var sep1_len = __instance.Font.MeasureString(sep_str1).X;
+
                 if (caretVisible)
                 {
-                    spriteBatch.Draw(Game1.staminaRect, new Rectangle(__instance.X + 16 + (int)sep1_len, __instance.Y + 8, 4, 32), __instance.TextColor);
+                    //caret width = 4
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle(offset + (int)sep1_len, __instance.Y + 8, 4, 32), __instance.TextColor);
                 }
                 if (drawShadow)
                 {
-                    Utility.drawTextWithShadow(spriteBatch, sep_str1, __instance.Font, new Vector2(__instance.X + 16, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 1f, -1f, -1, -1, 1f, 3);
-                    Utility.drawTextWithShadow(spriteBatch, sep_str2, __instance.Font, new Vector2(__instance.X + 16 + sep1_len + 4, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 1f, -1f, -1, -1, 1f, 3);
+                    Utility.drawTextWithShadow(spriteBatch, sep_str1, __instance.Font, new Vector2(offset, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 1f, -1f, -1, -1, 1f, 3);
+                    Utility.drawTextWithShadow(spriteBatch, sep_str2, __instance.Font, new Vector2(offset + sep1_len + 4, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 1f, -1f, -1, -1, 1f, 3);
                 }
                 else
                 {
-                    spriteBatch.DrawString(__instance.Font, sep_str1, new Vector2(__instance.X + 16, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.99f);
-                    spriteBatch.DrawString(__instance.Font, sep_str2, new Vector2(__instance.X + 16 + sep1_len + 4, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.99f);
+                    spriteBatch.DrawString(__instance.Font, sep_str1, new Vector2(offset, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.99f);
+                    spriteBatch.DrawString(__instance.Font, sep_str2, new Vector2(offset + sep1_len + 4, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.99f);
                 }
             }
             return false;
         }
         public static bool receiveEmoji(ChatTextBox __instance, int emoji)
         {
-            if (__instance.currentWidth + 40f > (float)(__instance.Width - 16))
+            if (__instance.currentWidth + 40f > 830)
             {
                 return false;
             }
@@ -795,12 +805,12 @@ namespace InputFix
             {
                 ChatSnippet item = __instance.finalText[i];
                 index += item.emojiIndex != -1 ? 1 : item.message.Length;
-                if (index == ModEntry.textbox_h.ACP_Start)
+                if (index == ModEntry.textbox_h.ACP_Start)//[text message/emoji][caret] 
                 {
                     __instance.finalText.Insert(i + 1, chatSnippet);
                     goto FinalEmoji;
                 }
-                else if (index > ModEntry.textbox_h.ACP_Start)
+                else if (index > ModEntry.textbox_h.ACP_Start)//[text  [caret]   message]
                 {
                     var sep_str1 = new ChatSnippet(item.message.Substring(0, ModEntry.textbox_h.ACP_Start - (index - item.message.Length)), LocalizedContentManager.CurrentLanguageCode);
                     var sep_str2 = new ChatSnippet(item.message.Substring(ModEntry.textbox_h.ACP_Start - (index - item.message.Length)), LocalizedContentManager.CurrentLanguageCode);
@@ -822,6 +832,11 @@ namespace InputFix
         public static bool CommandChatTextBoxDrawStart(TextBox __instance, SpriteBatch spriteBatch, Texture2D ____textBoxTexture, bool drawShadow = true)
         {
             return Draw(__instance, spriteBatch, ____textBoxTexture, drawShadow);
+        }
+
+        public static bool CommandChatTextBoxOnArrow(TextBox __instance)
+        {
+            return false;
         }
     }
 }
