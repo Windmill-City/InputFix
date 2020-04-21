@@ -35,9 +35,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="StardewModdingAPI">
-      <HintPath>F:\SteamLibrary\steamapps\common\Stardew Valley\StardewModdingAPI.exe</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -74,6 +71,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\InputFix\InputFix.csproj">
+      <Project>{be02d0db-f425-482b-a97c-a7b7963c803a}</Project>
+      <Name>InputFix</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
