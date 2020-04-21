@@ -72,11 +72,5 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\InputFix\InputFix.csproj">
-      <Project>{be02d0db-f425-482b-a97c-a7b7963c803a}</Project>
-      <Name>InputFix</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
