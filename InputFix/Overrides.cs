@@ -37,7 +37,6 @@ namespace InputFix
         private const int TF_CLEARTEXT = 0x060C;
         private const int TF_GETTEXTEXT = 0x060B;
         private const int TF_QUERYINSERT = 0x060A;
-        private const int TF_REPLACESEL = 0x0612;
 
         private const int WM_SETTEXTBOX = 0x0610;
         private const int WM_TerminateComposition = 0x0611;
@@ -792,7 +791,8 @@ namespace InputFix
                         spriteBatch.DrawString(__instance.Font, sep_str2, new Vector2(offset + sep1_len + 4, __instance.Y + ((____textBoxTexture != null) ? 12 : 8)), __instance.TextColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.99f);
                     }
                 }
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 ModEntry.monitor.Log("Failed when drawing TextBox", LogLevel.Error);
                 ModEntry.monitor.Log("Message:" + e.Message + " Source:" + e.Source, LogLevel.Error);

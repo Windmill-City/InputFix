@@ -203,7 +203,7 @@ namespace InputFix
             {
                 foreach (ChatSnippet item in ((ChatTextBox)ModEntry.textbox_h.current).finalText)
                 {
-                    stringBuilder.Append(item.emojiIndex != -1 ? String.Format("<Emoji:{0}/>",item.emojiIndex) : item.message);
+                    stringBuilder.Append(item.emojiIndex != -1 ? String.Format("<Emoji:{0}/>", item.emojiIndex) : item.message);
                 }
                 return stringBuilder.ToString();
             }

@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
@@ -26,7 +25,7 @@ namespace WindowsFormsApp1
 
         private void Form1_Move(object sender, System.EventArgs e)
         {
-            
+
         }
     }
 }
