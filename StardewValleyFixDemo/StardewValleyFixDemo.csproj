@@ -41,10 +41,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CharacterEventArgs.cs" />
     <Compile Include="ChatTextBox.cs" />
     <Compile Include="Game1.cs" />
-    <Compile Include="IKeyboardSubscriber.cs" />
     <Compile Include="ITextBox.cs" />
     <Compile Include="KeyBoardDispatcher.cs" />
     <Compile Include="KeyboardInput.cs" />
@@ -56,9 +54,9 @@
     <Reference Include="0Harmony, Version=2.0.0.10, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Lib.Harmony.2.0.0.10\lib\net45\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="MonoGame.Framework">
-      <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
-    </Reference>
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553" />
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Stardew Valley">
       <HintPath>F:\SteamLibrary\steamapps\common\Stardew Valley\Stardew Valley.exe</HintPath>
     </Reference>
@@ -72,6 +70,12 @@
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
     <None Include="app.manifest" />
+    <None Include="Content\chatBox.xnb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\emojis.xnb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Content\SmallFont.zh-CN.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

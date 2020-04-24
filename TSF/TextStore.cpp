@@ -195,6 +195,9 @@ STDMETHODIMP TextEdit::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch
 
     m_fNotify = true;
 
+    if(Acp->acpStart == -1 || Acp->acpEnd == -1)
+        return S_OK;
+
     *pacpResultStart = Acp->acpStart;
     *pacpResultEnd = Acp->acpEnd;
     return S_OK;

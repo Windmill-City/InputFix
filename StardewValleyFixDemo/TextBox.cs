@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewValley.SDKs;
 using System;
 using System.Text;
 
@@ -8,6 +9,7 @@ namespace StardewValley.Menus
 {
     public class TextBox : ITextBox
     {
+        #region Vars
         SpriteFont _font;
         public SpriteFont Font
         {
@@ -24,11 +26,48 @@ namespace StardewValley.Menus
                 return this._textColor;
             }
         }
-        public int X { get; set; }
-        public int Y { get; set; }
+        protected int _X;
+        public virtual int X
+        {
+            get
+            {
+                return _X;
+            }
+            set
+            {
+                _X = value;
+                DrawOrigin.X = _X + 16f;
+            }
+        }
+        protected int _Y;
+        public virtual int Y
+        {
+            get
+            {
+                return _Y;
+            }
+            set
+            {
+                _Y = value;
+                DrawOrigin.X = _Y + 8f;
+            }
+        }
         public int Width { get; set; }
         public int Height { get; set; }
         public bool PasswordBox { get; set; }
+
+        public bool limitWidth = true;
+        public string Text
+        {
+            get
+            {
+                return GetText();
+            }
+            set
+            {
+                SetText(value);
+            }
+        }
         bool _selected;
         public bool Selected
         {
@@ -44,95 +83,139 @@ namespace StardewValley.Menus
                     {
                         if (Game1.keyboardDispatcher.Subscriber == this)
                             Game1.keyboardDispatcher.Subscriber = null;
+                        this._showKeyboard = false;
+                        if (Program.sdk is SteamHelper && (Program.sdk as SteamHelper).active)
+                        {
+                            (Program.sdk as SteamHelper).CancelKeyboard();
+                        }
                     }
                     else
                     {
                         Game1.keyboardDispatcher.Subscriber = this;
+                        this._showKeyboard = true;
                     }
                     _selected = value;
                 }
             }
         }
-        public bool AllowIME
-        {
-            get
-            {
-                return !numbersOnly;
-            }
-        }
-
         public bool numbersOnly = false;
         public int textLimit = -1;
 
-        ACP acp = new ACP();
-        StringBuilder text = new StringBuilder("你好");
+        protected Vector2 DrawOrigin = new Vector2(16f, 8f);
+        protected Texture2D _textBoxTexture;
+        protected Texture2D _caretTexture;
 
-        public TextBox(SpriteFont font, Color color)
+        private bool _showKeyboard;
+        StringBuilder text = new StringBuilder();
+        #endregion Vars
+        #region TextBox
+        public event TextBoxEvent OnEnterPressed;
+        public event TextBoxEvent OnTabPressed;
+        public event TextBoxEvent OnBackspacePressed;
+        public TextBox(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor)
         {
+            this._textBoxTexture = textBoxTexture;
+            if (textBoxTexture != null)
+            {
+                Width = textBoxTexture.Width;
+                Height = textBoxTexture.Height;
+            }
+            _caretTexture = caretTexture;
             _font = font;
-            _textColor = color;
+            _textColor = textColor;
         }
-
-        public ACP GetSelection()
+        public void SelectMe()
+        {
+            Selected = true;
+        }
+        public void Update()
+        {
+            Game1.input.GetMouseState();
+            Point mousePoint = new Point(Game1.getMouseX(), Game1.getMouseY());
+            Rectangle position = new Rectangle(this.X, this.Y, this.Width, this.Height);
+            if (position.Contains(mousePoint))
+            {
+                this.Selected = true;
+            }
+            else
+            {
+                this.Selected = false;
+            }
+            if (this._showKeyboard)
+            {
+                if (Game1.options.gamepadControls && !Game1.lastCursorMotionWasMouse)
+                {
+                    Game1.showTextEntry(this);
+                }
+                this._showKeyboard = false;
+            }
+        }
+        public void Hover(int x, int y)
+        {
+            if (x > this.X && x < this.X + this.Width && y > this.Y && y < this.Y + this.Height)
+            {
+                Game1.SetFreeCursorDrag();
+            }
+        }
+        #endregion TextBox
+        #region ITextBox
+        protected Acp acp = new Acp();
+        public virtual Acp GetSelection()
         {
             return acp;
         }
 
-        public void SetSelection(int acpStart, int acpEnd)
+        public virtual void SetSelection(int acpStart, int acpEnd)
         {
-            acp.acpStart = acpStart;
-            acp.acpEnd = acpEnd;
+            acp.Start = acpStart;
+            acp.End = acpEnd;
 
             int len = GetTextLength();
-            if (acp.acpStart > len || acp.acpEnd > len)//out of range
+            if (acp.Start > len || acp.End > len)//out of range
             {
-                acp.acpEnd = acp.acpStart = len;//reset caret to the tail
+                acp.End = acp.Start = len;//reset caret to the tail
             }
         }
 
-        public string GetText()
+        public virtual string GetText()
         {
             return text.ToString();
         }
-#if TSF
-
-        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto, ExactSpelling = true)]
-        internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, ref RECT pt, int cPoints);
-#endif
-        public RECT GetTextExt(ACP acp)
+        public virtual RECT GetTextExt(Acp _acp)
         {
 
             RECT rect = new RECT();
-#if TSF
-            string text = GetText();
-            rect.left += (int)Font.MeasureString(text.Substring(0, acp.acpStart)).X;
-            rect.top = Y;
 
-            rect.right = rect.left + (int)Font.MeasureString(" ").X * (acp.acpEnd - acp.acpStart);
-            rect.bottom = rect.top + (int)Font.MeasureString(" ").Y + 8;
+            string text = PasswordBox ? new string('*', GetTextLength()) : GetText();
+            //acpend may smaller than acpstart
+            var start = Math.Min(_acp.Start, _acp.End);
+            var end = Math.Max(_acp.Start, _acp.End);
 
-            MapWindowPoints(Game1.game1.Window.Handle, (IntPtr)0, ref rect, 2);
-#endif
+            rect.left += (int)(Font.MeasureString(text.Substring(0, start)).X + DrawOrigin.X);
+            rect.top = (int)DrawOrigin.Y;
+
+            var vec_text = Font.MeasureString(text.Substring(start, end - start));
+            rect.right = rect.left + (int)vec_text.X;
+            rect.bottom = rect.top + (int)vec_text.Y;
+
             return rect;
         }
 
-        public int GetTextLength()
+        public virtual int GetTextLength()
         {
             return text.Length;
         }
 
-        public ACP QueryInsert(ACP acp, uint cch)
+        public virtual Acp QueryInsert(Acp _acp, uint cch)
         {
-            if (textLimit != -1)
-                acp.acpEnd = Math.Min(textLimit, acp.acpEnd);
-            return acp;
+            return _acp;//always allow insert, composition str may longer than result str
         }
 
-        public void SetText(string str)
+        public virtual void SetText(string str)
         {
             text.Clear();
             text.Append(str);
-            acp.acpStart = acp.acpEnd = text.Length;
+            acp.Start = acp.End = text.Length;
 #if TSF
             if (Game1.keyboardDispatcher.Subscriber == this)//changed by other method, except IME
             {
@@ -142,65 +225,93 @@ namespace StardewValley.Menus
 #endif
         }
 
-        public void ReplaceSelection(string _text)
+        public virtual void ReplaceSelection(string _text)
         {
-            if(acp.acpEnd < acp.acpStart)//it means delete and insert text
+            if (acp.End != acp.Start)//it means delete and insert text
             {
-                text.Remove(acp.acpEnd, acp.acpStart - acp.acpEnd);
-                acp.acpStart = acp.acpEnd;
+                var start = Math.Min(acp.Start, acp.End);
+                text.Remove(start, Math.Abs(acp.Start - acp.End));
+                acp.Start = acp.End = start;
             }
-            if ((Font.MeasureString(text).X + Font.MeasureString(_text).X) < Width)//insert
+            if ((textLimit == -1 || text.Length + _text.Length < textLimit) && (Font.MeasureString(_text).X + Font.MeasureString(text).X) < Width - 16)
             {
-                text.Insert(acp.acpStart, _text);
-                //after insert index
-                acp.acpEnd = acp.acpStart + _text.Length;
+                text.Insert(acp.Start, _text);
+                acp.End += _text.Length;
             }
         }
 
-        public ACP GetAcpByRange(RECT rect)
+        public virtual Acp GetAcpByRange(RECT rect)
         {
-            ACP result = new ACP();
+            Acp result = new Acp();
             var text = GetText();
-            float width = X;
-            if(rect.left <= X + Font.MeasureString(text).X && rect.right >= X && rect.bottom <= Y && rect.top >= Font.MeasureString(text).Y + Y)
+            float width = X + 16f;
+            if (rect.left <= X + Width && rect.top <= Y + Height && rect.right >= X && rect.bottom >= Y)//check if overlap textbox
             {
-                for (int i = 0; i < text.Length; i++)
+                if (rect.right <= width)
                 {
-                    var char_x = Font.MeasureString(text[i].ToString()).X;
-                    width += char_x;
-                    result.acpStart++;
-                    if (width > rect.left)
+                    result.Start = result.End = 0;
+                }
+                else if (rect.left >= Font.MeasureString(text).X + width)
+                {
+                    result.Start = result.End = GetTextLength();
+                }
+                else
+                {
+                    for (int i = 0; i < text.Length; i++)
                     {
-                        result.acpEnd = result.acpStart;
-                        for(i++; i < text.Length; i++)
+                        var char_x = Font.MeasureString(text[i].ToString()).X;
+                        width += char_x;
+                        if (width > rect.left)
                         {
-                            char_x = Font.MeasureString(text[i].ToString()).X;
-                            width += char_x;
-                            result.acpEnd++;
-                            if (width > rect.right)
-                                break;
+                            result.Start += ((width - char_x / 2) <= rect.left) ? 1 : 0;//divide char from middle, if selection is on the left part, we dont sel this word
+                            result.End = result.Start;
+                            result.End += (((width - char_x / 2) < rect.right) && ((width - char_x / 2) > rect.left)) ? 1 : 0;
+                            if (width >= rect.right)
+                            {
+                                return result;
+                            }
+                            for (i++; i < text.Length; i++)
+                            {
+                                char_x = Font.MeasureString(text[i].ToString()).X;
+                                width += char_x;
+                                if (width > rect.right)
+                                {
+                                    result.End += ((width - char_x / 2) < rect.right) ? 1 : 0;//divide char from middle, if selection is on the left part, we dont sel this word
+                                    return result;
+                                }
+                                result.End++;
+                            }
+                            break;
                         }
-                        break;
+                        result.Start++;
                     }
                 }
             }
             else
             {
-                result.acpStart = result.acpEnd = -1;
+                result.Start = result.End = -1;
             }
             return result;
         }
-
-        public void RecieveCommandInput(char command)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
+        public bool AllowIME
+        {
+            get
+            {
+                return !numbersOnly;
+            }
+        }
+        #endregion ITextBox
+        #region IKeyboardSubscriber
+        public virtual void RecieveCommandInput(char command)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
             switch (command)
             {
                 case '\b':
-                    if (acp.acpStart == acp.acpEnd && acp.acpEnd > 0)//if not, means it alradey have something selected, we just delete it
+                    if (acp.Start == acp.End && acp.End > 0)//if not, means it alradey have something selected, we just delete it
                     {
-                        acp.acpEnd--;//it selected nothing, reduce end to delete a char
+                        acp.End--;//it selected nothing, reduce end to delete a char
                     }
-                    if (acp.acpStart != acp.acpEnd)
+                    if (acp.Start != acp.End)
                     {
                         ReplaceSelection("");
 #if TSF
@@ -209,102 +320,191 @@ namespace StardewValley.Menus
                             Game1.tsf.onTextChange();//not changed by IME, should notify
                             Game1.tsf.onSelChange();
                         }
+
 #endif
+                        if (Game1.gameMode != 3)
+                        {
+                            Game1.playSound("tinyWhip");
+                            return;
+                        }
                     }
+                    //OnBackspacePressed?.Invoke(this);
                     break;
                 case '\r':
-                    //onEnterPressed
+                    //OnEnterPressed?.Invoke(this);
                     break;
                 case '\t':
-                    //onTabPressed
+                    //OnTabPressed?.Invoke(this);
                     break;
                 default:
                     break;
             }
         }
 
-        public void RecieveSpecialInput(Keys key)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
+        public virtual void RecieveSpecialInput(Keys key)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
             switch (key)
             {
                 case Keys.Left:
-                    if(acp.acpStart > 0 || acp.acpEnd > 0)
+                    if (Game1.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift))
                     {
-                        if (acp.acpStart != acp.acpEnd)
-                            acp.acpEnd = acp.acpStart = Math.Min(acp.acpEnd, acp.acpStart);//have selected sth, go to the left most
+                        if (acp.End > 0)
+                        {
+                            acp.End--;
+                            goto HasUpdated;
+                        }
+                    }
+                    else
+                    if (acp.Start > 0 || acp.End > 0)
+                    {
+                        if (acp.Start != acp.End)
+                            acp.End = acp.Start = Math.Min(acp.End, acp.Start);//have selected sth, go to the left most
                         else
-                            acp.acpStart = --acp.acpEnd;//left move caret
-#if TSF
-                        if (Game1.keyboardDispatcher.Subscriber == this)
-                            Game1.tsf.onSelChange();
-#endif
+                            acp.Start = --acp.End;//left move caret
+                        goto HasUpdated;
                     }
                     break;
                 case Keys.Right:
                     var len = GetTextLength();
-                    if (acp.acpStart < len || acp.acpEnd < len)
+                    if (Game1.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift))
                     {
-                        if (acp.acpStart != acp.acpEnd)
-                            acp.acpEnd = acp.acpStart = Math.Max(acp.acpEnd, acp.acpStart);//have selected sth, go to the right most
+                        if (acp.End < len)
+                        {
+                            acp.End++;
+                            goto HasUpdated;
+                        }
+                    }
+                    else
+                    if (acp.Start < len || acp.End < len)
+                    {
+                        if (acp.Start != acp.End)
+                            acp.End = acp.Start = Math.Max(acp.End, acp.Start);//have selected sth, go to the right most
                         else
-                            acp.acpStart = ++acp.acpEnd;//right move caret
-#if TSF
-                        if (Game1.keyboardDispatcher.Subscriber == this)
-                            Game1.tsf.onSelChange();
-#endif
+                            acp.Start = ++acp.End;//right move caret
+                        goto HasUpdated;
                     }
                     break;
                 default:
                     break;
             }
+            return;
+        HasUpdated:
+            {
+#if TSF
+                if (Game1.keyboardDispatcher.Subscriber == this)
+                    Game1.tsf.onSelChange();
+#endif
+            }
         }
 
-        public void RecieveTextInput(char inputChar)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
+        public virtual void RecieveTextInput(char inputChar)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
             RecieveTextInput(inputChar.ToString());
         }
 
-        public void RecieveTextInput(string text)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
+        public virtual void RecieveTextInput(string text)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
-            ACP temp_acp = new ACP();
-            temp_acp.acpEnd = acp.acpEnd + text.Length;
-            temp_acp.acpStart = acp.acpStart;
+            int dummy = -1;
+            if (this.Selected && (!this.numbersOnly || int.TryParse(text, out dummy)) && (this.textLimit == -1 || this.Text.Length < this.textLimit))
+            {
+                if (Game1.gameMode != 3)
+                    switch (text)
+                    {
+                        case "\"":
+                            return;
+                        case "$":
+                            Game1.playSound("money");
+                            break;
+                        case "*":
+                            Game1.playSound("hammer");
+                            break;
+                        case "+":
+                            Game1.playSound("slimeHit");
+                            break;
+                        case "<":
+                            Game1.playSound("crystal");
+                            break;
+                        case "=":
+                            Game1.playSound("coin");
+                            break;
+                        default:
+                            Game1.playSound("cowboy_monsterhit");
+                            break;
+                    }
+                Acp temp_acp = new Acp();
+                temp_acp.End = acp.End;
+                temp_acp.Start = acp.Start;
 
-            acp = QueryInsert(temp_acp, (uint)text.Length);
-            ReplaceSelection(text);
+                acp = QueryInsert(temp_acp, (uint)text.Length);
+                ReplaceSelection(text);
 #if TSF
-            if (Game1.keyboardDispatcher.Subscriber == this)
-                Game1.tsf.onTextChange();//not changed by IME, should notify
+                if (Game1.keyboardDispatcher.Subscriber == this)
+                    Game1.tsf.onTextChange();//not changed by IME, should notify
 #endif
-            acp.acpStart = acp.acpEnd;
+                acp.Start = acp.End;
 #if TSF
-            if (Game1.keyboardDispatcher.Subscriber == this)
-                Game1.tsf.onSelChange();
+                if (Game1.keyboardDispatcher.Subscriber == this)
+                    Game1.tsf.onSelChange();
 #endif
-
+            }
         }
+        #endregion IKeyboardSubscriber
+        #region Draw
 
         public virtual void Draw(SpriteBatch spriteBatch, bool drawShadow = true)
         {
-           
-            bool caretVisible = DateTime.UtcNow.Millisecond % 1000 >= 500;
-                
-            string toDraw = PasswordBox ? new string('*', text.Length) : text.ToString();
+            DrawBackGround(spriteBatch);
 
-            int offset = X + 16;
-
-            var sep_str1 = toDraw.Substring(0, acp.acpStart);
-            var sep_str2 = toDraw.Substring(acp.acpStart);
-            var sep1_len = Font.MeasureString(sep_str1).X;
-
-            if (caretVisible)
-            {
-                //caret width = 4
-                spriteBatch.DrawString(Font, "|", new Vector2(offset + sep1_len, Y + (8)), TextColor);
-            }
-            spriteBatch.DrawString(Font, sep_str1, new Vector2(offset, Y + (8)), TextColor);
-            spriteBatch.DrawString(Font, sep_str2, new Vector2(offset + sep1_len + 4, Y + 8), TextColor);
+            float offset = DrawOrigin.X;
+            DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref offset, TextColor, drawShadow);
+            DrawCaret(spriteBatch, ref offset);
+            DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref offset, TextColor, drawShadow);
 
         }
+
+        protected virtual void DrawByAcp(SpriteBatch spriteBatch, Acp acp, ref float offset, Color color, bool drawShadow = true)
+        {
+            var len = Math.Abs(acp.Start - acp.End);
+            var start = Math.Min(acp.Start, acp.End);
+            var _text = PasswordBox ? new string('*', len) : text.ToString(start, len);
+            spriteBatch.DrawString(Font, _text, new Vector2(offset, DrawOrigin.Y), color);
+            offset += Font.MeasureString(_text).X;
+        }
+
+        protected virtual void DrawCaret(SpriteBatch spriteBatch, ref float offset, bool drawShadow = true)
+        {
+            if (acp.End == acp.Start)
+            {
+                bool caretVisible = DateTime.UtcNow.Millisecond % 1000 >= 500;
+                if (caretVisible)
+                {
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)offset, (int)DrawOrigin.Y, 4, 32), TextColor);
+                }
+                offset += 4;
+            }
+            else
+            {
+                //Draw selection
+                RECT rect = GetTextExt(acp);
+                Texture2D selectionRect = new Texture2D(Game1.game1.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                Color[] colors = new Color[1];
+                selectionRect.GetData(colors);
+                colors[0] = Color.Gray;
+                colors[0].A = (byte)0.8f;
+                selectionRect.SetData(colors);
+                spriteBatch.Draw(selectionRect, new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top), Color.Gray);
+            }
+        }
+
+        protected virtual void DrawBackGround(SpriteBatch spriteBatch)
+        {
+            if (this._textBoxTexture != null)
+            {
+                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X, this.Y, 16, this.Height), new Rectangle?(new Rectangle(0, 0, 16, this.Height)), Color.White);
+                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X + 16, this.Y, this.Width - 32, this.Height), new Rectangle?(new Rectangle(16, 0, 4, this.Height)), Color.White);
+                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X + this.Width - 16, this.Y, 16, this.Height), new Rectangle?(new Rectangle(this._textBoxTexture.Bounds.Width - 16, 0, 16, this.Height)), Color.White);
+            }
+        }
+        #endregion Draw
     }
 }

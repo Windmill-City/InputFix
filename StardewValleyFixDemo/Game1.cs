@@ -1,4 +1,4 @@
-﻿#define Mono
+﻿#define XNA
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,6 +14,7 @@ namespace StardewValley
     /// </summary>
     public class Game1 : Game
     {
+        public static LocalizedContentManager content;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         public static int gameMode = 0;
@@ -21,7 +22,12 @@ namespace StardewValley
         public static Game1 game1;
         public static TextBox textBox;
         public static Texture2D staminaRect;
-        SpriteFont smallFont;
+        public static Texture2D chatboxtexture;
+        public static Texture2D emojitexture;
+        public SpriteFont smallFont;
+        public static Options options;
+        public static bool lastCursorMotionWasMouse;
+        public static InputState input = new InputState();
 #if TSF
         public static TSF tsf;
 #endif
@@ -29,6 +35,7 @@ namespace StardewValley
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
             Content.RootDirectory = "Content";
             game1 = this;
         }
@@ -36,13 +43,20 @@ namespace StardewValley
         protected override void Initialize()
         {
             keyboardDispatcher = new KeyboardDispatcher(this.Window);
+            IsMouseVisible = true;
 #if TSF
+            InitTSF();
+#endif
+            base.Initialize();
+        }
+#if TSF
+        private void InitTSF()
+        {
             tsf = new TSF();//Need to init at STA Thread
-            tsf.AssociateFocus(this.Window.Handle);
+            tsf.AssociateFocus(this.Window.Handle);//Window need to create in a STA Thread
             tsf.Active();
             tsf.CreateContext(this.Window.Handle);
             tsf.PushContext();
-#endif
 #if XNA
             FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
             Type type = host.GetValue(Game1.game1).GetType();
@@ -56,20 +70,36 @@ namespace StardewValley
             Harmony harmony = new Harmony("StardewValley_TSF");
             harmony.Patch(m_idle, null, new HarmonyMethod(typeof(Game1), "HandleMsgFirst"));//need to handle msg first, or the game will struck after IME actived
 #endif
-            base.Initialize();
         }
+#endif
 #if TSF
         private static void HandleMsgFirst()
         {
             tsf.PumpMsg(Game1.game1.Window.Handle);
         }
 #endif
+        protected internal virtual LocalizedContentManager CreateContentManager(IServiceProvider serviceProvider, string rootDirectory)
+        {
+            return new LocalizedContentManager(serviceProvider, rootDirectory);
+        }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            content = this.CreateContentManager(base.Content.ServiceProvider, base.Content.RootDirectory);
+            chatboxtexture = content.Load<Texture2D>("chatBox");
             smallFont = Content.Load<SpriteFont>("SmallFont.zh-CN");
+            emojitexture = content.Load<Texture2D>("emojis");
             staminaRect = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+            Game1.options = new Options();
+            Color[] colors = new Color[staminaRect.Width * staminaRect.Height];
+            staminaRect.GetData(colors);
+            for (int i = 0; i < colors.Length; i++)
+            {
+                Color color = new Color(255f, 255f, 255f, 1f);
+                colors[i] = color;
+            }
+            staminaRect.SetData(colors);
         }
 
         protected override void UnloadContent()
@@ -79,11 +109,11 @@ namespace StardewValley
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            if(textBox == null)
+            if (textBox == null)
             {
-                textBox = new TextBox(smallFont,Color.Black);
-                textBox.Width = 800;
-                textBox.Height = 100;
+                textBox = new ChatTextBox(chatboxtexture, null, smallFont, Color.White);
+                textBox.Width = 896 / 2;
+                textBox.Height = 56;
                 keyboardDispatcher.Subscriber = textBox;
             }
         }
@@ -91,10 +121,32 @@ namespace StardewValley
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
             textBox.Draw(spriteBatch);
             spriteBatch.End();
             base.Draw(gameTime);
+        }
+        public static KeyboardState GetKeyboardState()
+        {
+            KeyboardState keyState = Keyboard.GetState();
+            return keyState;
+        }
+        public static int getMouseX()
+        {
+            return (int)((float)Game1.input.GetMouseState().X * (1f / Game1.options.zoomLevel));
+        }
+        public static int getMouseY()
+        {
+            return (int)((float)Game1.input.GetMouseState().Y * (1f / Game1.options.zoomLevel));
+        }
+        public static void showTextEntry(StardewValley.Menus.TextBox text_box)
+        {
+        }
+        public static void playSound(string cueName)
+        {
+        }
+        public static void SetFreeCursorDrag()
+        {
         }
     }
 }

@@ -219,7 +219,7 @@ namespace InputFix
                         ModEntry.textbox_h.ACP_End = (int)lParam;
                         ModEntry.textbox_h.ACP_Start = (int)wParam;
 
-                        if (ModEntry.textbox_h.ACP_Start > ModEntry.textbox_h.getTextLen() || ModEntry.textbox_h.ACP_End > ModEntry.textbox_h.getTextLen())
+                        if (ModEntry.textbox_h.ACP_Start > ModEntry.textbox_h.getTextLen())
                             ModEntry.textbox_h.resetAcp();
 
                         ModEntry.monitor.Log("SETSEL ACP_Start:" + ModEntry.textbox_h.ACP_Start + "ACP_End:" + ModEntry.textbox_h.ACP_End, StardewModdingAPI.LogLevel.Trace);
@@ -505,15 +505,8 @@ namespace InputFix
                 && cursor.ScreenPixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
                 && cursor.ScreenPixels.Y > ModEntry.textbox_h.current.Y
                 && cursor.ScreenPixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height);
-            /*
-            bool AbsolutePixels = (cursor.AbsolutePixels.X > ModEntry.textbox_h.current.X
-                && cursor.AbsolutePixels.X < ModEntry.textbox_h.current.X + ModEntry.textbox_h.current.Width
-                && cursor.AbsolutePixels.Y > ModEntry.textbox_h.current.Y
-                && cursor.AbsolutePixels.Y < ModEntry.textbox_h.current.Y + ModEntry.textbox_h.current.Height);
-            */
-            if (ScreenPixels /*|| AbsolutePixels*/)
+            if (ScreenPixels)
             {
-                //float mouse_x = ScreenPixels ? cursor.ScreenPixels.X : cursor.AbsolutePixels.X;
                 float mouse_x = cursor.ScreenPixels.X;
                 if (ModEntry.textbox_h.current is ChatTextBox)
                 {
