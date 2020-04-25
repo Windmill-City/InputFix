@@ -419,8 +419,9 @@ namespace InputFix
                                     else
                                     {
                                         //acp selection may cross snippet, dont out of range
-                                        int len = Math.Min(ModEntry.textbox_h.ACP_End - ModEntry.textbox_h.ACP_Start, item.message.Length);
-                                        item.message = item.message.Remove(ModEntry.textbox_h.ACP_Start - (index - item.message.Length), len);
+                                        var start = ModEntry.textbox_h.ACP_Start - (index - item.message.Length);
+                                        int len = Math.Min(ModEntry.textbox_h.ACP_End - ModEntry.textbox_h.ACP_Start, item.message.Length - start);
+                                        item.message = item.message.Remove(start, len);
                                         ModEntry.textbox_h.ACP_End -= len;
                                         index -= len;
                                         if (item.message.Length == 0)//empty, remove it

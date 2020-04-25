@@ -13,6 +13,10 @@ namespace StardewValley.Menus
         /// </summary>
         /// <param name="str"></param>
         void SetText(string str);
+        /// <summary>
+        /// Get plain text
+        /// </summary>
+        /// <param name="str"></param>
         string GetText();
         /// <summary>
         /// The SetSelection method selects text within the TextBox.
@@ -20,7 +24,21 @@ namespace StardewValley.Menus
         /// <param name="acpStart"></param>
         /// <param name="acpEnd"></param>
         void SetSelection(int acpStart, int acpEnd);
+        /// <summary>
+        /// Set Selection state
+        /// </summary>
+        /// <returns></returns>
+        void SetSelState(SelState state);
+        /// <summary>
+        /// Get Selection
+        /// </summary>
+        /// <returns></returns>
         Acp GetSelection();
+        /// <summary>
+        /// Get Selection state
+        /// </summary>
+        /// <returns></returns>
+        SelState GetSelState();
         /// <summary>
         /// The QueryInsert method determines whether the specified start and end character positions are valid.
         /// Use this method to adjust an edit to a document before executing the edit. The method must not return values outside the range of the document.
@@ -103,4 +121,20 @@ namespace StardewValley.Menus
         public int right;
         public int bottom;
     };
+
+    public enum SelState
+    {
+        /// <summary>
+        /// Nothing selected
+        /// </summary>
+        SEL_AE_NONE,
+        /// <summary>
+        /// Selection start at acp.Start
+        /// </summary>
+        SEL_AE_START,
+        /// <summary>
+        /// Selection start at acp.End
+        /// </summary>
+        SEL_AE_END
+    }
 }

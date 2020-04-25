@@ -35,7 +35,7 @@ namespace StardewValley.Menus
             set
             {
                 _Y = value;
-                DrawOrigin.X = _Y + 12f;
+                DrawOrigin.Y = _Y + 12f;
             }
         }
         #endregion Vars
@@ -62,6 +62,7 @@ namespace StardewValley.Menus
         }
         public void receiveEmoji(int emoji)
         {
+            ReplaceSelection("");
             if (currentWidth + 40f > Width - 66)
             {
                 return;
@@ -234,6 +235,9 @@ namespace StardewValley.Menus
         }
         public override RECT GetTextExt(Acp acp)
         {
+            var test_len = GetTextLength();
+            if (acp.End > test_len)
+                acp.End = test_len;
             RECT rect = new RECT();
             var start = Math.Min(acp.Start, acp.End);
             var end = Math.Max(acp.Start, acp.End);
@@ -255,8 +259,8 @@ namespace StardewValley.Menus
                     {
                         if (item.emojiIndex != -1)
                         {
-                            rect.left += (int)item.myLength;
                             rect.right += rect.left;
+                            rect.right += (int)item.myLength;
                             index++;
                             if (index == end)
                             {
@@ -311,41 +315,45 @@ namespace StardewValley.Menus
 
         public override void ReplaceSelection(string _text)
         {
-            if (acp.End != acp.Start)//delete selection
+            if (acp.Start != acp.End)//delete selection
             {
-                if (acp.End > acp.Start)
+                if (acp.End < acp.Start)
                 {
                     var temp = acp.Start;
                     acp.Start = acp.End;
                     acp.End = temp;
                 }
                 int _index = 0;
-                for (int i = 0; i < finalText.Count && acp.Start - acp.End > 0; i++)//delete text/emoji before start reach end
+                for (int i = 0; i < finalText.Count && acp.End - acp.Start > 0; i++)//delete text/emoji before end reach start
                 {
                     ChatSnippet item = finalText[i];
                     _index += item.emojiIndex != -1 ? 1 : item.message.Length;
-                    if (_index >= acp.Start)
+                    if (_index > acp.Start)
                     {
                         if (item.emojiIndex != -1)
                         {
                             finalText.RemoveAt(i);
                             i--;
-                            acp.Start--;
+                            acp.End--;
                             _index--;
                             if (i >= 0 && finalText.Count > i + 1 && finalText[i].emojiIndex == -1 && finalText[i + 1].emojiIndex == -1)
                             {
                                 //both text,merge it
+                                _index -= finalText[i].message.Length;
                                 finalText[i].message += finalText[i + 1].message;
                                 finalText[i].myLength += finalText[i + 1].myLength;
                                 finalText.RemoveAt(i + 1);
+                                //re-handle this snippet
+                                i--;
                             }
                         }
                         else
                         {
                             //acp selection may cross snippet, dont out of range
-                            int len = Math.Min(acp.Start - acp.End, item.message.Length);
-                            item.message = item.message.Remove(acp.End - (_index - item.message.Length), len);
-                            acp.Start -= len;
+                            var start = acp.Start - (_index - item.message.Length);
+                            int len = Math.Min(acp.End - acp.Start, item.message.Length - start);
+                            item.message = item.message.Remove(start, len);
+                            acp.End -= len;
                             _index -= len;
                             if (item.message.Length == 0)//empty, remove it
                             {
@@ -363,6 +371,8 @@ namespace StardewValley.Menus
             }
             int index = 0;
             ChatSnippet chatSnippet = new ChatSnippet(_text, LocalizedContentManager.CurrentLanguageCode);
+            if (chatSnippet.myLength == 0)
+                return;
             for (int i = 0; i < finalText.Count; i++)
             {
                 if (chatSnippet.myLength + currentWidth >= Width - 66)
@@ -388,6 +398,8 @@ namespace StardewValley.Menus
         Final:
             acp.End = acp.Start + chatSnippet.message.Length;
             updateWidth();
+            //IME input dont play sound, english input sound is handled at IKeyboadSubscriber
+            //Game1.playSound("cowboy_monsterhit");//TSF may replace some word, which will make the sound strange
         }
         #endregion ITextBox
         #region Draw
@@ -396,10 +408,14 @@ namespace StardewValley.Menus
             DrawBackGround(spriteBatch);
 
             float xPositionSoFar = DrawOrigin.X;
-
-            DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref xPositionSoFar, TextColor, drawShadow);
-            DrawCaret(spriteBatch, ref xPositionSoFar);
-            DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref xPositionSoFar, TextColor, drawShadow);
+            if (Selected)
+            {
+                DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref xPositionSoFar, TextColor, drawShadow);
+                DrawCaret(spriteBatch, ref xPositionSoFar);
+                DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref xPositionSoFar, TextColor, drawShadow);
+            }
+            else
+                DrawByAcp(spriteBatch, new Acp(0, GetTextLength()), ref xPositionSoFar, TextColor, drawShadow);
         }
         protected override void DrawByAcp(SpriteBatch spriteBatch, Acp acp, ref float offset, Color color, bool drawShadow = true)
         {
@@ -421,9 +437,9 @@ namespace StardewValley.Menus
                         if (item.emojiIndex != -1)
                         {
                             index++;
+                            DrawChatSnippet(spriteBatch, item, ref offset, drawShadow);
                             if (index == end)
                             {
-                                DrawChatSnippet(spriteBatch, item, ref offset, drawShadow);
                                 goto Finish;
                             }
                         }
@@ -473,14 +489,11 @@ namespace StardewValley.Menus
             if (snippet.emojiIndex != -1)
             {
                 spriteBatch.Draw(
-                    //ChatBox.emojiTexture,
-                    Game1.staminaRect,
+                    ChatBox.emojiTexture,
                     new Vector2(offset, DrawOrigin.Y),
                     new Rectangle?(new Rectangle(
-                        //item.emojiIndex * 9 % ChatBox.emojiTexture.Width,
-                        //item.emojiIndex * 9 / ChatBox.emojiTexture.Width * 9,
-                        0,
-                        0,
+                        snippet.emojiIndex * 9 % ChatBox.emojiTexture.Width,
+                        snippet.emojiIndex * 9 / ChatBox.emojiTexture.Width * 9,
                         9,
                         9)),
                     Color.White,

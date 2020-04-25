@@ -241,8 +241,7 @@ STDMETHODIMP_(HRESULT __stdcall) TextEdit::GetSelection(ULONG ulIndex, ULONG ulC
 
     _GetCurrentSelection();
 
-    //if the caret position is the same as the start character, then the selection end is the start of the selection
-    m_ActiveSelEnd = m_acpStart == m_acpEnd ? TS_AE_NONE : m_acpStart < m_acpEnd ? TS_AE_START : TS_AE_END;
+    m_ActiveSelEnd = (TsActiveSelEnd)SendMessage(m_hWnd, TF_GETSELSTATE, 0, 0);
 
     pSelection[0].acpStart = m_acpStart;
     pSelection[0].acpEnd = m_acpEnd;

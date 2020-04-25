@@ -86,7 +86,18 @@ namespace StardewValley
                     this._subscriber.Selected = true;
 #if TSF
                     if (Game1.gameMode != 6)//cant change input state during loading,or the game will struck
-                        Game1.tsf.SetEnable(_subscriber is ITextBox && ((ITextBox)_subscriber).AllowIME);//set if allow IME composition
+                    {
+                        if (_subscriber is ITextBox && ((ITextBox)_subscriber).AllowIME)
+                        {
+                            Game1.tsf.onTextChange();
+                            Game1.tsf.onSelChange();
+                            Game1.tsf.SetEnable(true);//set if allow IME composition
+                        }
+                        else
+                        {
+                            Game1.tsf.SetEnable(false);
+                        }
+                    }
                     return;
 #endif
                 }
@@ -96,6 +107,7 @@ namespace StardewValley
                     if (Game1.gameMode != 6)//cant change input state during loading,or the game will struck
                         Game1.tsf.SetEnable(false);
                 }
+                Game1.tsf.TerminateComposition();
 #endif
             }
         }

@@ -32,6 +32,7 @@ namespace StardewValley
         private const int TF_CLEARTEXT = 0x060C;
         private const int TF_GETTEXTEXT = 0x060B;
         private const int TF_QUERYINSERT = 0x060A;
+        private const int TF_GETSELSTATE = 0x0609;
 
         private const int EM_REPLACESEL = 0x00C2;
         private const int EM_SETSEL = 0x00B1;
@@ -115,10 +116,13 @@ namespace StardewValley
                         if (acp.Start >= 0)
                         {
                             textBox.SetSelection(acp.Start, acp.End);
+                            textBox.SetSelState(MouseSelection.left > MouseSelection.right ? SelState.SEL_AE_END : SelState.SEL_AE_START);
                             Console.WriteLine("ACPStart:{0},ACPEnd:{1}", acp.Start, acp.End);
                             Console.WriteLine("MouseMove:Left:{0},TOP:{1}RIGHT:{2}BOTTOM:{3}", MouseSelection.left, MouseSelection.top, MouseSelection.right, MouseSelection.bottom);
                         }
                     }
+                    //handle IsMouseVisable
+                    returnCode = KeyboardInput.CallWindowProc(KeyboardInput.prevWndProc, hWnd, msg, wParam, lParam);
                     break;
                 case WM_LBUTTONUP:
                     Selecting = false;
@@ -145,6 +149,13 @@ namespace StardewValley
                     {
                         ITextBox textBox = Game1.keyboardDispatcher.Subscriber as ITextBox;
                         textBox.ReplaceSelection(Marshal.PtrToStringAuto(lParam));
+                    }
+                    break;
+                case TF_GETSELSTATE:
+                    if (Game1.keyboardDispatcher.Subscriber is ITextBox)
+                    {
+                        ITextBox textBox = Game1.keyboardDispatcher.Subscriber as ITextBox;
+                        returnCode = (IntPtr)textBox.GetSelState();
                     }
                     break;
                 case TF_GETTEXT:

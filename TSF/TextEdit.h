@@ -32,6 +32,7 @@ INITGUID.H just before the first time you include TSATTRS.H
 #define TF_CLEARTEXT        0x060C
 #define TF_GETTEXTEXT       0x060B
 #define TF_QUERYINSERT      0x060A
+#define TF_GETSELSTATE      0x0609
 
 typedef struct
 {

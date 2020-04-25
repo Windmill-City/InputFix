@@ -134,6 +134,7 @@ STDMETHODIMP TextEdit::OnStartComposition(ITfCompositionView* pComposition, BOOL
 STDMETHODIMP TextEdit::OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew)
 {
     OutputDebugString(TEXT("OnUpdateComposition\n"));
+    SendMessage(m_hWnd, WM_IME_COMPOSITION, 0, 0);
     return S_OK;
 }
 

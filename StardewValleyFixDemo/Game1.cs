@@ -23,7 +23,6 @@ namespace StardewValley
         public static TextBox textBox;
         public static Texture2D staminaRect;
         public static Texture2D chatboxtexture;
-        public static Texture2D emojitexture;
         public SpriteFont smallFont;
         public static Options options;
         public static bool lastCursorMotionWasMouse;
@@ -37,13 +36,15 @@ namespace StardewValley
             graphics = new GraphicsDeviceManager(this);
             graphics.GraphicsProfile = GraphicsProfile.HiDef;
             Content.RootDirectory = "Content";
+            IsMouseVisible = true;
             game1 = this;
+
         }
 
         protected override void Initialize()
         {
+
             keyboardDispatcher = new KeyboardDispatcher(this.Window);
-            IsMouseVisible = true;
 #if TSF
             InitTSF();
 #endif
@@ -85,11 +86,12 @@ namespace StardewValley
 
         protected override void LoadContent()
         {
+
             spriteBatch = new SpriteBatch(GraphicsDevice);
             content = this.CreateContentManager(base.Content.ServiceProvider, base.Content.RootDirectory);
             chatboxtexture = content.Load<Texture2D>("chatBox");
             smallFont = Content.Load<SpriteFont>("SmallFont.zh-CN");
-            emojitexture = content.Load<Texture2D>("emojis");
+            ChatBox.emojiTexture = content.Load<Texture2D>("emojis");
             staminaRect = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Game1.options = new Options();
             Color[] colors = new Color[staminaRect.Width * staminaRect.Height];
@@ -105,7 +107,7 @@ namespace StardewValley
         protected override void UnloadContent()
         {
         }
-
+        bool rightmouse = false;
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
@@ -114,7 +116,17 @@ namespace StardewValley
                 textBox = new ChatTextBox(chatboxtexture, null, smallFont, Color.White);
                 textBox.Width = 896 / 2;
                 textBox.Height = 56;
-                keyboardDispatcher.Subscriber = textBox;
+                textBox.Selected = true;
+            }
+            if (input.GetMouseState().RightButton == ButtonState.Pressed && !rightmouse)
+            {
+                rightmouse = true;
+                var chat = textBox as ChatTextBox;
+                chat.receiveEmoji(1);
+            }
+            if (input.GetMouseState().RightButton == ButtonState.Released)
+            {
+                rightmouse = false;
             }
         }
 
@@ -147,6 +159,11 @@ namespace StardewValley
         }
         public static void SetFreeCursorDrag()
         {
+        }
+
+        internal static void drawDialogueBox(int v1, int v2, int v3, int height, bool v4, bool v5, object p, bool v6, bool v7, int v8, int v9, int v10)
+        {
+            throw new NotImplementedException();
         }
     }
 }

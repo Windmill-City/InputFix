@@ -23,7 +23,7 @@ namespace StardewValley.Menus
         {
             get
             {
-                return this._textColor;
+                return _textColor;
             }
         }
         protected int _X;
@@ -49,7 +49,7 @@ namespace StardewValley.Menus
             set
             {
                 _Y = value;
-                DrawOrigin.X = _Y + 8f;
+                DrawOrigin.Y = _Y + 8f;
             }
         }
         public int Width { get; set; }
@@ -79,11 +79,12 @@ namespace StardewValley.Menus
             {
                 if (_selected != value)
                 {
-                    if (_selected)
+                    _selected = value;
+                    if (!_selected)
                     {
                         if (Game1.keyboardDispatcher.Subscriber == this)
                             Game1.keyboardDispatcher.Subscriber = null;
-                        this._showKeyboard = false;
+                        _showKeyboard = false;
                         if (Program.sdk is SteamHelper && (Program.sdk as SteamHelper).active)
                         {
                             (Program.sdk as SteamHelper).CancelKeyboard();
@@ -92,9 +93,8 @@ namespace StardewValley.Menus
                     else
                     {
                         Game1.keyboardDispatcher.Subscriber = this;
-                        this._showKeyboard = true;
+                        _showKeyboard = true;
                     }
-                    _selected = value;
                 }
             }
         }
@@ -105,16 +105,20 @@ namespace StardewValley.Menus
         protected Texture2D _textBoxTexture;
         protected Texture2D _caretTexture;
 
-        private bool _showKeyboard;
+        //just for arrow key/mouse selection, dont use it to handle text change
+        SelState selState = SelState.SEL_AE_NONE;
+        bool _showKeyboard;
         StringBuilder text = new StringBuilder();
         #endregion Vars
         #region TextBox
+        public delegate void TextBoxEvent(TextBox sender);
+
         public event TextBoxEvent OnEnterPressed;
         public event TextBoxEvent OnTabPressed;
         public event TextBoxEvent OnBackspacePressed;
         public TextBox(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor)
         {
-            this._textBoxTexture = textBoxTexture;
+            _textBoxTexture = textBoxTexture;
             if (textBoxTexture != null)
             {
                 Width = textBoxTexture.Width;
@@ -132,27 +136,27 @@ namespace StardewValley.Menus
         {
             Game1.input.GetMouseState();
             Point mousePoint = new Point(Game1.getMouseX(), Game1.getMouseY());
-            Rectangle position = new Rectangle(this.X, this.Y, this.Width, this.Height);
+            Rectangle position = new Rectangle(X, Y, Width, Height);
             if (position.Contains(mousePoint))
             {
-                this.Selected = true;
+                Selected = true;
             }
             else
             {
-                this.Selected = false;
+                Selected = false;
             }
-            if (this._showKeyboard)
+            if (_showKeyboard)
             {
                 if (Game1.options.gamepadControls && !Game1.lastCursorMotionWasMouse)
                 {
                     Game1.showTextEntry(this);
                 }
-                this._showKeyboard = false;
+                _showKeyboard = false;
             }
         }
         public void Hover(int x, int y)
         {
-            if (x > this.X && x < this.X + this.Width && y > this.Y && y < this.Y + this.Height)
+            if (x > X && x < X + Width && y > Y && y < Y + Height)
             {
                 Game1.SetFreeCursorDrag();
             }
@@ -160,9 +164,33 @@ namespace StardewValley.Menus
         #endregion TextBox
         #region ITextBox
         protected Acp acp = new Acp();
+
         public virtual Acp GetSelection()
         {
             return acp;
+        }
+
+        public SelState GetSelState()
+        {
+            switch (selState)
+            {
+                case SelState.SEL_AE_START:
+                case SelState.SEL_AE_END:
+                    if (acp.Start == acp.End)
+                    {
+                        selState = SelState.SEL_AE_NONE;
+                    }
+                    break;
+                case SelState.SEL_AE_NONE:
+                    if (acp.Start != acp.End)
+                    {
+                        selState = SelState.SEL_AE_START;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return selState;
         }
 
         public virtual void SetSelection(int acpStart, int acpEnd)
@@ -172,18 +200,28 @@ namespace StardewValley.Menus
 
             int len = GetTextLength();
             if (acp.Start > len || acp.End > len)//out of range
-            {
                 acp.End = acp.Start = len;//reset caret to the tail
-            }
+#if TSF
+            if (Game1.keyboardDispatcher.Subscriber == this)
+                Game1.tsf.onSelChange();
+#endif
+        }
+
+        public void SetSelState(SelState state)
+        {
+            selState = state;
         }
 
         public virtual string GetText()
         {
             return text.ToString();
         }
+
         public virtual RECT GetTextExt(Acp _acp)
         {
-
+            var len = GetTextLength();
+            if (_acp.End > len)
+                _acp.End = len;
             RECT rect = new RECT();
 
             string text = PasswordBox ? new string('*', GetTextLength()) : GetText();
@@ -233,10 +271,12 @@ namespace StardewValley.Menus
                 text.Remove(start, Math.Abs(acp.Start - acp.End));
                 acp.Start = acp.End = start;
             }
-            if ((textLimit == -1 || text.Length + _text.Length < textLimit) && (Font.MeasureString(_text).X + Font.MeasureString(text).X) < Width - 16)
+            if (_text != "" && (textLimit == -1 || text.Length + _text.Length < textLimit) && (Font.MeasureString(_text).X + Font.MeasureString(text).X) < Width - 16)
             {
                 text.Insert(acp.Start, _text);
                 acp.End += _text.Length;
+                //IME input dont play sound, english input sound is handled at IKeyboadSubscriber
+                //Game1.playSound("cowboy_monsterhit");//TSF may replace some word, which will make the sound strange
             }
         }
 
@@ -244,7 +284,7 @@ namespace StardewValley.Menus
         {
             Acp result = new Acp();
             var text = GetText();
-            float width = X + 16f;
+            float width = DrawOrigin.X;
             if (rect.left <= X + Width && rect.top <= Y + Height && rect.right >= X && rect.bottom >= Y)//check if overlap textbox
             {
                 if (rect.right <= width)
@@ -293,6 +333,7 @@ namespace StardewValley.Menus
             }
             return result;
         }
+
         public bool AllowIME
         {
             get
@@ -307,11 +348,11 @@ namespace StardewValley.Menus
             switch (command)
             {
                 case '\b':
-                    if (acp.Start == acp.End && acp.End > 0)//if not, means it alradey have something selected, we just delete it
+                    if (acp.End == acp.Start && acp.Start > 0)//if not, means it alradey have something selected, we just delete it
                     {
-                        acp.End--;//it selected nothing, reduce end to delete a char
+                        acp.Start--;//it selected nothing, reduce end to delete a char
                     }
-                    if (acp.Start != acp.End)
+                    if (acp.End != acp.Start)
                     {
                         ReplaceSelection("");
 #if TSF
@@ -328,13 +369,13 @@ namespace StardewValley.Menus
                             return;
                         }
                     }
-                    //OnBackspacePressed?.Invoke(this);
+                    OnBackspacePressed?.Invoke(this);
                     break;
                 case '\r':
-                    //OnEnterPressed?.Invoke(this);
+                    OnEnterPressed?.Invoke(this);
                     break;
                 case '\t':
-                    //OnTabPressed?.Invoke(this);
+                    OnTabPressed?.Invoke(this);
                     break;
                 default:
                     break;
@@ -343,44 +384,99 @@ namespace StardewValley.Menus
 
         public virtual void RecieveSpecialInput(Keys key)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
+            var shiftPressed = (Game1.input.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift));
             switch (key)
             {
                 case Keys.Left:
-                    if (Game1.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift))
-                    {
-                        if (acp.End > 0)
-                        {
-                            acp.End--;
-                            goto HasUpdated;
-                        }
-                    }
-                    else
                     if (acp.Start > 0 || acp.End > 0)
                     {
-                        if (acp.Start != acp.End)
-                            acp.End = acp.Start = Math.Min(acp.End, acp.Start);//have selected sth, go to the left most
-                        else
-                            acp.Start = --acp.End;//left move caret
+                        switch (GetSelState())
+                        {
+                            case SelState.SEL_AE_START:
+                                if (shiftPressed)
+                                {
+                                    if (acp.End > 0)
+                                        acp.End--;
+                                    else
+                                        return;
+                                }
+                                else
+                                {
+                                    acp.End = acp.Start;
+                                }
+                                break;
+                            case SelState.SEL_AE_END:
+                                if (shiftPressed)
+                                {
+                                    if (acp.Start > 0)
+                                        acp.Start--;
+                                    else
+                                        return;
+                                }
+                                else
+                                {
+                                    acp.End = acp.Start;
+                                }
+                                break;
+                            case SelState.SEL_AE_NONE:
+                                if (shiftPressed)
+                                {
+                                    acp.Start--;
+                                    selState = SelState.SEL_AE_END;
+                                }
+                                else
+                                {
+                                    acp.End = acp.Start = --acp.Start;
+                                }
+                                break;
+                        }
                         goto HasUpdated;
                     }
                     break;
                 case Keys.Right:
                     var len = GetTextLength();
-                    if (Game1.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift))
-                    {
-                        if (acp.End < len)
-                        {
-                            acp.End++;
-                            goto HasUpdated;
-                        }
-                    }
-                    else
                     if (acp.Start < len || acp.End < len)
                     {
-                        if (acp.Start != acp.End)
-                            acp.End = acp.Start = Math.Max(acp.End, acp.Start);//have selected sth, go to the right most
-                        else
-                            acp.Start = ++acp.End;//right move caret
+                        switch (GetSelState())
+                        {
+                            case SelState.SEL_AE_START:
+                                if (shiftPressed)
+                                {
+                                    if (acp.End < len)
+                                        acp.End++;
+                                    else
+                                        return;
+                                }
+                                else
+                                {
+                                    acp.Start = acp.End;
+                                }
+                                break;
+                            case SelState.SEL_AE_END:
+                                if (shiftPressed)
+                                {
+                                    if (acp.Start < len)
+                                        acp.Start++;
+                                    else
+                                        return;
+                                }
+                                else
+                                {
+                                    acp.Start = acp.End;
+                                }
+                                break;
+                            case SelState.SEL_AE_NONE:
+                                if (shiftPressed)
+                                {
+                                    acp.End++;
+                                    selState = SelState.SEL_AE_START;
+                                }
+                                else
+                                {
+                                    acp.End = acp.Start = ++acp.Start;
+                                }
+                                break;
+                        }
                         goto HasUpdated;
                     }
                     break;
@@ -405,7 +501,7 @@ namespace StardewValley.Menus
         public virtual void RecieveTextInput(string text)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
             int dummy = -1;
-            if (this.Selected && (!this.numbersOnly || int.TryParse(text, out dummy)) && (this.textLimit == -1 || this.Text.Length < this.textLimit))
+            if (Selected && (!numbersOnly || int.TryParse(text, out dummy)) && (textLimit == -1 || Text.Length < textLimit))
             {
                 if (Game1.gameMode != 3)
                     switch (text)
@@ -456,9 +552,14 @@ namespace StardewValley.Menus
             DrawBackGround(spriteBatch);
 
             float offset = DrawOrigin.X;
-            DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref offset, TextColor, drawShadow);
-            DrawCaret(spriteBatch, ref offset);
-            DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref offset, TextColor, drawShadow);
+            if (Selected)
+            {
+                DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref offset, TextColor, drawShadow);
+                DrawCaret(spriteBatch, ref offset);
+                DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref offset, TextColor, drawShadow);
+            }
+            else
+                DrawByAcp(spriteBatch, new Acp(0, GetTextLength()), ref offset, TextColor, drawShadow);
 
         }
 
@@ -490,7 +591,7 @@ namespace StardewValley.Menus
                 Color[] colors = new Color[1];
                 selectionRect.GetData(colors);
                 colors[0] = Color.Gray;
-                colors[0].A = (byte)0.8f;
+                colors[0].A = (byte)(0.6f * 255);
                 selectionRect.SetData(colors);
                 spriteBatch.Draw(selectionRect, new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top), Color.Gray);
             }
@@ -498,12 +599,14 @@ namespace StardewValley.Menus
 
         protected virtual void DrawBackGround(SpriteBatch spriteBatch)
         {
-            if (this._textBoxTexture != null)
+            if (_textBoxTexture != null)
             {
-                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X, this.Y, 16, this.Height), new Rectangle?(new Rectangle(0, 0, 16, this.Height)), Color.White);
-                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X + 16, this.Y, this.Width - 32, this.Height), new Rectangle?(new Rectangle(16, 0, 4, this.Height)), Color.White);
-                spriteBatch.Draw(this._textBoxTexture, new Rectangle(this.X + this.Width - 16, this.Y, 16, this.Height), new Rectangle?(new Rectangle(this._textBoxTexture.Bounds.Width - 16, 0, 16, this.Height)), Color.White);
+                spriteBatch.Draw(_textBoxTexture, new Rectangle(X, Y, 16, Height), new Rectangle?(new Rectangle(0, 0, 16, Height)), Color.White);
+                spriteBatch.Draw(_textBoxTexture, new Rectangle(X + 16, Y, Width - 32, Height), new Rectangle?(new Rectangle(16, 0, 4, Height)), Color.White);
+                spriteBatch.Draw(_textBoxTexture, new Rectangle(X + Width - 16, Y, 16, Height), new Rectangle?(new Rectangle(_textBoxTexture.Bounds.Width - 16, 0, 16, Height)), Color.White);
             }
+            else
+                Game1.drawDialogueBox(X - 32, Y - 112 + 10, Width + 80, Height, false, true, null, false, true, -1, -1, -1);
         }
         #endregion Draw
     }
