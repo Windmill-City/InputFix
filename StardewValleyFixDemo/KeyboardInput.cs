@@ -68,7 +68,7 @@ namespace StardewValley
 
         private static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            IntPtr returnCode = IntPtr.Zero;
+            IntPtr returnCode = KeyboardInput.CallWindowProc(KeyboardInput.prevWndProc, hWnd, msg, wParam, lParam); ;
             switch (msg)
             {
                 case WM_GETDLGCODE:
@@ -199,7 +199,6 @@ namespace StardewValley
                     break;
 #endif
                 default:
-                    returnCode = KeyboardInput.CallWindowProc(KeyboardInput.prevWndProc, hWnd, msg, wParam, lParam);
                     break;
             }
             return returnCode;
