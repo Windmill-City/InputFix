@@ -363,7 +363,7 @@ namespace StardewValley.Menus
                         }
 
 #endif
-                        if (Game1.gameMode == 3)
+                        if (Game1.gameMode != 3)
                         {
                             Game1.playSound("tinyWhip");
                             return;
@@ -503,7 +503,7 @@ namespace StardewValley.Menus
             int dummy = -1;
             if (Selected && (!numbersOnly || int.TryParse(text, out dummy)) && (textLimit == -1 || Text.Length < textLimit))
             {
-                if (Game1.gameMode == 3)
+                if (Game1.gameMode != 3)
                     switch (text)
                     {
                         case "\"":
