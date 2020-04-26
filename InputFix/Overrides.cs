@@ -12,6 +12,14 @@ namespace InputFix
 {
     public class Overrides
     {
+        /// <summary>
+        /// really bad code， just make it work
+        /// if you want a normal implementat， go to  StardewValleyFixDemo
+        /// lazy, no more code review
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="hIMC"></param>
+        /// <returns></returns>
         [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr ImmReleaseContext(IntPtr hWnd, IntPtr hIMC);
 
