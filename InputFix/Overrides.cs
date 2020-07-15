@@ -364,10 +364,10 @@ namespace InputFix
         }
         public static void Subscriber_Set()
         {
-            if (Game1.gameMode != 6)//cant change input state during loading,or the game will struck
+            if (Game1.gameMode == Game1.playingGameMode || Game1.gameMode == Game1.titleScreenGameMode)//cant change input state except playing or in titlescreen,or the game will struck
             {
                 PostMessage(Game1.game1.Window.Handle, WM_TerminateComposition, 0, 0);
-                if (Game1.keyboardDispatcher.Subscriber != null && Game1.keyboardDispatcher.Subscriber is TextBox && !((TextBox)Game1.keyboardDispatcher.Subscriber).numbersOnly)
+                if (Game1.keyboardDispatcher.Subscriber is TextBox && !((TextBox)Game1.keyboardDispatcher.Subscriber).numbersOnly)
                 {
                     ModEntry.textbox_h.enableInput(false);
                     PostMessage(Game1.game1.Window.Handle, WM_SETTEXTBOX, 0, 0);
