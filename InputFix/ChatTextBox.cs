@@ -18,7 +18,7 @@ namespace InputFix
         {
             get
             {
-                return base.X;
+                return _X;
             }
             set
             {
@@ -33,7 +33,7 @@ namespace InputFix
         {
             get
             {
-                return base.Y;
+                return _Y;
             }
             set
             {
@@ -47,6 +47,8 @@ namespace InputFix
         #endregion Vars
 
         #region ChatTextBox
+
+        public new event TextBoxEvent OnEnterPressed;
 
         public ChatTextBox_(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor) : base(textBoxTexture, caretTexture, font, textColor)
         {
@@ -478,7 +480,7 @@ namespace InputFix
                     break;
 
                 case '\r':
-                    //OnEnterPressed?.Invoke(this);
+                    OnEnterPressed?.Invoke(this);
                     break;
 
                 case '\t':
@@ -492,7 +494,7 @@ namespace InputFix
 
         public new void RecieveSpecialInput(Keys key)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
-            var shiftPressed = (Game1.GetKeyboardState().IsKeyDown(Keys.LeftShift) || Game1.GetKeyboardState().IsKeyDown(Keys.RightShift));
+            var shiftPressed = (ModEntry._helper.Input.IsDown(StardewModdingAPI.SButton.LeftShift) || ModEntry._helper.Input.IsDown(StardewModdingAPI.SButton.RightShift));
             switch (key)
             {
                 case Keys.Left:

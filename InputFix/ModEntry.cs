@@ -1,4 +1,6 @@
 ﻿using Harmony;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -38,6 +40,20 @@ namespace InputFix
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
                 Compatibility.PatchChatCommands(monitor, harmony);
             }
+            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+        }
+
+        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        {
+            //replace ChatTextBox
+            Texture2D texture2D = Game1.content.Load<Texture2D>("LooseSprites\\chatBox");
+            ChatTextBox_ chatTextBox_ = new ChatTextBox_(texture2D, null, Game1.smallFont, Color.White);
+            chatTextBox_.OnEnterPressed += new TextBoxEvent(Game1.chatBox.textBoxEnter);
+            chatTextBox_.X = Game1.chatBox.chatBox.X;
+            chatTextBox_.Y = Game1.chatBox.chatBox.Y;
+            chatTextBox_.Width = Game1.chatBox.chatBox.Width;
+            chatTextBox_.Height = Game1.chatBox.chatBox.Height;
+            Game1.chatBox.chatBox = chatTextBox_;
         }
 
         private void RegCommand(IModHelper helper)
