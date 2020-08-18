@@ -20,6 +20,8 @@ namespace InputFix
 
         public static event KeyEventHandler KeyUp;
 
+        #region Dll Import
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
@@ -28,6 +30,10 @@ namespace InputFix
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         internal static extern int MapWindowPoints(IntPtr hWndFrom, IntPtr hWndTo, ref RECT pt, int cPoints);
+
+        #endregion Dll Import
+
+        #region WM_MSG
 
         private const int WM_KEYDOWN = 0x100;
         private const int WM_KEYUP = 0x101;
@@ -39,6 +45,8 @@ namespace InputFix
         private const int DLGC_WANTALLKEYS = 4;
         private const int WM_GETDLGCODE = 135;
         private const int GWL_WNDPROC = -4;
+
+        #endregion WM_MSG
 
         public static void Initialize(GameWindow window)
         {
@@ -62,6 +70,8 @@ namespace InputFix
             initialized = true;
         }
 
+        #region KeyboardDispatcher
+
         private static void KeyboardInput__KeyDown(object sender, KeyEventArgs e)
         {
             Game1.keyboardDispatcher.Subscriber?.RecieveSpecialInput(e.KeyCode);
@@ -83,6 +93,10 @@ namespace InputFix
             Game1.keyboardDispatcher.Subscriber?.RecieveCommandInput(e.Character);
         }
 
+        #endregion KeyboardDispatcher
+
+        #region HandleImeSharpEvent
+
         private static void InputMethod_TextInput(object sender, ImeSharp.TextInputEventArgs e)
         {
             CharEntered?.Invoke(null, new CharacterEventArgs(e.Character, 0));
@@ -91,6 +105,8 @@ namespace InputFix
         private static void InputMethod_TextComposition(object sender, ImeSharp.TextCompositionEventArgs e)
         {
         }
+
+        #endregion HandleImeSharpEvent
 
         private static RECT MouseSelection = new RECT();
         private static bool Selecting = false;
