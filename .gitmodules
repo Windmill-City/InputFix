@@ -1,0 +1,3 @@
+[submodule "ImeSharp"]
+	path = ImeSharp
+	url = https://github.com/ryancheung/ImeSharp.git
