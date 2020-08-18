@@ -56,10 +56,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatTextBox.cs" />
     <Compile Include="Compatibility.cs" />
+    <Compile Include="ITextBox.cs" />
+    <Compile Include="KeyboardInput.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Overrides.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextBox_.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json" />
@@ -67,9 +71,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TSF\TSF.vcxproj">
-      <Project>{b63d4fd2-837e-4a11-9907-9c33383fb3bf}</Project>
-      <Name>TSF</Name>
+    <ProjectReference Include="..\ImeSharp\ImeSharp\ImeSharp.csproj">
+      <Project>{974e877e-4b65-44ad-bebc-3b821fead516}</Project>
+      <Name>ImeSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

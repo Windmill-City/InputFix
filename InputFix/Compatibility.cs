@@ -7,7 +7,6 @@ namespace InputFix
 {
     public class Compatibility
     {
-
         public static void PatchChatCommands(IMonitor monitor, HarmonyInstance harmony)
         {
             Type CCTB = getByFullName("ChatCommands.ClassReplacements.CommandChatTextBox");
@@ -37,6 +36,7 @@ namespace InputFix
                 monitor.Log("CommandChatTextBox NOT FOUND", LogLevel.Error);
             }
         }
+
         public static Type getByFullName(string typeName)
         {
             Type type = null;

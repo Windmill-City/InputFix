@@ -1,25 +1,21 @@
 ﻿using Harmony;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Reflection;
-using System.Text;
 
 namespace InputFix
 {
     /// <summary>The mod entry point.</summary>
     public class ModEntry : Mod
     {
-        public static TSF tsf;
         public static IMonitor monitor;
-        public static TextBoxHelper textbox_h;
         public static IModHelper _helper;
         /*********
         ** Public methods
         *********/
+
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
@@ -27,40 +23,14 @@ namespace InputFix
             monitor = this.Monitor;
             _helper = helper;
 
+            KeyboardInput_.Initialize(Game1.game1.Window);
+
             RegCommand(helper);
-
-            helper.Events.GameLoop.UpdateTicked += Overrides.HandleMouseEvents;
-
-            tsf = new TSF();
-            tsf.AssociateFocus(Game1.game1.Window.Handle);
-
-            textbox_h = new TextBoxHelper(tsf, Game1.game1.Window.Handle);
 
             HarmonyInstance harmony = HarmonyInstance.Create(base.ModManifest.UniqueID);
 
-            MethodInfo m_HookProc = typeof(KeyboardInput).GetMethod("HookProc", BindingFlags.NonPublic | BindingFlags.Static);
-            harmony.Patch(m_HookProc, new HarmonyMethod(typeof(Overrides), "KeyboardInput_HookProc"));
-
             MethodInfo m_selected = typeof(KeyboardDispatcher).GetMethod("set_Subscriber", BindingFlags.Public | BindingFlags.Instance);
             harmony.Patch(m_selected, null, new HarmonyMethod(typeof(Overrides), "Subscriber_Set"));
-
-            MethodInfo m_text = typeof(TextBox).GetMethod("set_Text", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_text, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
-
-            MethodInfo m_draw = typeof(TextBox).GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_draw, new HarmonyMethod(typeof(Overrides), "Draw"));
-
-            MethodInfo m_draw2 = typeof(ChatTextBox).GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "Draw"));
-
-            MethodInfo m_emoji = typeof(ChatTextBox).GetMethod("receiveEmoji", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_emoji, new HarmonyMethod(typeof(Overrides), "receiveEmoji"));
-
-
-            FieldInfo host = typeof(Game).GetField("host", BindingFlags.NonPublic | BindingFlags.Instance);
-            Type type = host.GetValue(Game1.game1).GetType();
-            MethodInfo m_idle = type.GetMethod("ApplicationIdle", BindingFlags.NonPublic | BindingFlags.Instance);
-            harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ModEntry), "HandleMsgFirst"));
 
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
@@ -145,98 +115,6 @@ namespace InputFix
                 string str = String.Format("Debug:{0}", Game1.debugMode);
                 monitor.Log(str, LogLevel.Info);
             }));
-        }
-
-        private static void HandleMsgFirst()
-        {
-            tsf.PumpMsg(Game1.game1.Window.Handle);
-        }
-    }
-
-    public class TextBoxHelper
-    {
-        TSF tsf;
-        public bool _enable = false;
-
-        public SpriteFont font;
-        public int X = 0;
-        public int Y = 0;
-        public int ACP_Start = 0;
-        public int ACP_End = 0;
-        public TextBox current;
-        public TextBoxHelper(TSF _tsf, IntPtr _hWnd)
-        {
-            tsf = _tsf;
-            tsf.Active();
-            tsf.CreateContext(_hWnd);
-            tsf.PushContext();
-        }
-
-        public void SetTextBox(TextBox textBox)
-        {
-            current = textBox;
-            X = current.X;
-            Y = current.Y;
-            font = current is ChatTextBox ? ChatBox.messageFont(LocalizedContentManager.CurrentLanguageCode) : current.Font;
-            resetAcp();
-        }
-
-        public int getTextLen()
-        {
-            if (current is ChatTextBox)
-            {
-                int len = 0;
-                foreach (ChatSnippet item in ((ChatTextBox)ModEntry.textbox_h.current).finalText)
-                {
-                    len += item.emojiIndex != -1 ? 1 : item.message.Length;
-                }
-                return len;
-            }
-            else
-                return current.Text.Length;
-        }
-
-        public string getText()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            if (current is ChatTextBox)
-            {
-                foreach (ChatSnippet item in ((ChatTextBox)ModEntry.textbox_h.current).finalText)
-                {
-                    stringBuilder.Append(item.emojiIndex != -1 ? String.Format("<Emoji:{0}/>", item.emojiIndex) : item.message);
-                }
-                return stringBuilder.ToString();
-            }
-            else
-                return current.Text;
-        }
-
-        public void resetAcp()
-        {
-            ModEntry.textbox_h.ACP_Start = ModEntry.textbox_h.ACP_End = getTextLen();
-            tsf.onTextChange();
-            tsf.onSelChange();
-        }
-
-        public void SetFont(SpriteFont _font)
-        {
-            font = _font;
-        }
-
-        public void enableInput(bool enable)
-        {
-            if (enable != _enable)
-            {
-                _enable = enable;
-                tsf.SetEnable(enable);
-            }
-        }
-
-        ~TextBoxHelper()
-        {
-            tsf.PopContext();
-            tsf.ReleaseContext();
-            tsf.Deactive();
         }
     }
 }
