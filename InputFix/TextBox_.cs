@@ -23,8 +23,8 @@ namespace InputFix
                 if (value != base.X)
                 {
                     base.X = value;
-                    DrawOrigin.X = base.X + 16f;
                 }
+                DrawOrigin.X = base.X + 16f;
             }
         }
 
@@ -39,8 +39,8 @@ namespace InputFix
                 if (value != base.Y)
                 {
                     base.Y = value;
-                    DrawOrigin.Y = base.Y + 8f;
                 }
+                DrawOrigin.Y = base.Y + 8f;
             }
         }
 
