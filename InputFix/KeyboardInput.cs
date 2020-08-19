@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Harmony;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
@@ -63,8 +64,7 @@ namespace InputFix
 
             SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
-            FieldInfo field = typeof(KeyboardInput).GetField("prevWndProc", BindingFlags.Static | BindingFlags.NonPublic);
-            prevWndProc = (IntPtr)field.GetValue(typeof(KeyboardInput));
+            prevWndProc = (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("prevWndProc").GetValue();
 
             CharEntered += KeyboardInput__CharEntered;
             KeyDown += KeyboardInput__KeyDown;

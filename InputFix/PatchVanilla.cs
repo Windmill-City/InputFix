@@ -23,6 +23,7 @@ namespace InputFix
         }
     }
 
+    [HarmonyPatchAll]
     [HarmonyPatch(typeof(ChatBox))]
     internal class PatchChatBox
     {

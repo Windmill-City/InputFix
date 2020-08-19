@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\bsdiff.net\src\bsdiff\BsDiff.csproj" />
+    <ProjectReference Include="..\bsdiff.net\src\bsdiff\BsDiff.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,5 +33,4 @@
       <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
 </Project>
