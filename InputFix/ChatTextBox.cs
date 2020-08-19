@@ -49,6 +49,8 @@ namespace InputFix
         #region ChatTextBox
 
         public new event TextBoxEvent OnEnterPressed;
+        public new event TextBoxEvent OnTabPressed;
+        public new event TextBoxEvent OnBackspacePressed;
 
         public ChatTextBox_(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor) : base(textBoxTexture, caretTexture, font, textColor)
         {
@@ -476,7 +478,7 @@ namespace InputFix
                             return;
                         }
                     }
-                    //OnBackspacePressed?.Invoke(this);
+                    OnBackspacePressed?.Invoke(this);
                     break;
 
                 case '\r':
@@ -484,7 +486,7 @@ namespace InputFix
                     break;
 
                 case '\t':
-                    //OnTabPressed?.Invoke(this);
+                    OnTabPressed?.Invoke(this);
                     break;
 
                 default:
