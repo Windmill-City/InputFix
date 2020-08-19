@@ -3,6 +3,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Threading;
 
 namespace InputFix
 {
@@ -11,6 +12,7 @@ namespace InputFix
     {
         public static IMonitor monitor;
         public static IModHelper _helper;
+        private static int mainThreadId;
         /*********
         ** Public methods
         *********/
@@ -21,6 +23,7 @@ namespace InputFix
         {
             monitor = Monitor;
             _helper = helper;
+            mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
             KeyboardInput_.Initialize(Game1.game1.Window);
 
@@ -34,6 +37,11 @@ namespace InputFix
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
                 Compatibility.PatchChatCommands(monitor, harmony);
             }
+        }
+
+        public static bool isMainThread()
+        {
+            return Thread.CurrentThread.ManagedThreadId == mainThreadId;
         }
 
         private void RegCommand(IModHelper helper)

@@ -12,33 +12,35 @@ namespace InputFix
     {
         #region Vars
 
-        protected int _X;
-
         public new virtual int X
         {
             get
             {
-                return _X;
+                return base.X;
             }
             set
             {
-                _X = value;
-                DrawOrigin.X = _X + 16f;
+                if (value != base.X)
+                {
+                    base.X = value;
+                    DrawOrigin.X = base.X + 16f;
+                }
             }
         }
-
-        protected int _Y;
 
         public new virtual int Y
         {
             get
             {
-                return _Y;
+                return base.Y;
             }
             set
             {
-                _Y = value;
-                DrawOrigin.Y = _Y + 8f;
+                if (value != base.Y)
+                {
+                    base.Y = value;
+                    DrawOrigin.Y = base.Y + 8f;
+                }
             }
         }
 
@@ -62,10 +64,6 @@ namespace InputFix
         private StringBuilder text = new StringBuilder();
 
         #endregion Vars
-
-        public new event TextBoxEvent OnEnterPressed;
-
-        public new event TextBoxEvent OnTabPressed;
 
         public new event TextBoxEvent OnBackspacePressed;
 
@@ -267,11 +265,8 @@ namespace InputFix
                     break;
 
                 case '\r':
-                    OnEnterPressed?.Invoke(this);
-                    break;
-
                 case '\t':
-                    OnTabPressed?.Invoke(this);
+                    base.RecieveCommandInput(command);
                     break;
 
                 default:
@@ -446,9 +441,52 @@ namespace InputFix
                 DrawByAcp(spriteBatch, new Acp(0, acp.Start), ref offset, TextColor, drawShadow);
                 DrawCaret(spriteBatch, ref offset);
                 DrawByAcp(spriteBatch, new Acp(acp.Start, GetTextLength()), ref offset, TextColor, drawShadow);
+                DrawComp(spriteBatch);
             }
             else
                 DrawByAcp(spriteBatch, new Acp(0, GetTextLength()), ref offset, TextColor, drawShadow);
+        }
+
+        protected virtual void DrawComp(SpriteBatch spriteBatch)
+        {
+            string compStr = KeyboardInput_.compStr;
+            int curSel = Math.Min(KeyboardInput_.compStr.Length, KeyboardInput_.compSel);
+            if (compStr.Length > 0)
+            {
+                //compstr draw at the acpStart pos
+                float offset = GetTextExt(new Acp(acp.Start, acp.Start)).left;
+
+                string left = compStr.Substring(0, curSel);
+                string right = compStr.Substring(curSel, compStr.Length - curSel);
+                Vector2 vec_left = Font.MeasureString(left);
+                Vector2 vec_right = Font.MeasureString(right);
+                //Draw background
+                Texture2D Rect = new Texture2D(Game1.game1.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                Color[] colors = new Color[1];
+                Rect.GetData(colors);
+                colors[0] = Color.White;
+                Rect.SetData(colors);
+                spriteBatch.Draw(Rect, new Rectangle((int)offset,
+                    (int)DrawOrigin.Y,
+                    (int)(vec_left.X + vec_right.X + 10),//plus 10 to make the bounding box a bit larger, or the caret may not visable
+                    32),
+                    Color.White);
+
+                offset += 4;//make items in the white background
+
+                //Draw left part
+                spriteBatch.DrawString(Font, left, new Vector2(offset, DrawOrigin.Y), Color.Black);
+                offset += vec_left.X;
+                //Draw caret
+                bool caretVisible = DateTime.UtcNow.Millisecond % 1000 >= 500;
+                if (caretVisible || true)
+                {
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)offset, (int)DrawOrigin.Y, 2, 32), Color.Black);
+                }
+                //Draw right part
+                spriteBatch.DrawString(Font, right, new Vector2(offset, DrawOrigin.Y), Color.Black);
+                offset += vec_right.X;
+            }
         }
 
         protected virtual void DrawByAcp(SpriteBatch spriteBatch, Acp acp, ref float offset, Color color, bool drawShadow = true)

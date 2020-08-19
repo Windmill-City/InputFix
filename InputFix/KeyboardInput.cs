@@ -100,18 +100,21 @@ namespace InputFix
             CharEntered?.Invoke(null, new CharacterEventArgs(e.Character, 0));
         }
 
-        private static string compStr;
+        public static string compStr = "";
+
+        public static int compSel = 0;
 
         private static void InputMethod_TextComposition(object sender, ImeSharp.TextCompositionEventArgs e)
         {
             compStr = e.CompositionText.ToString();
+            compSel = e.CursorPosition;
             ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
             if (textBox_ != null && textBox_.AllowIME)
             {
                 Vector2 vector2 = Game1.smallFont.MeasureString(compStr);
                 Acp acp = textBox_.GetSelection();
                 RECT rECT = textBox_.GetTextExt(new Acp(0, acp.Start));
-                ImeSharp.InputMethod.SetTextInputRect(rECT.right, rECT.top, (int)vector2.X, (int)vector2.Y);
+                ImeSharp.InputMethod.SetTextInputRect(rECT.right, rECT.top, (int)vector2.X, 32);
             }
         }
 
