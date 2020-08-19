@@ -13,32 +13,38 @@ namespace StardewValley.Menus
         /// </summary>
         /// <param name="str"></param>
         void SetText(string str);
+
         /// <summary>
         /// Get plain text
         /// </summary>
         /// <param name="str"></param>
         string GetText();
+
         /// <summary>
         /// The SetSelection method selects text within the TextBox.
         /// </summary>
         /// <param name="acpStart"></param>
         /// <param name="acpEnd"></param>
         void SetSelection(int acpStart, int acpEnd);
+
         /// <summary>
         /// Set Selection state
         /// </summary>
         /// <returns></returns>
         void SetSelState(SelState state);
+
         /// <summary>
         /// Get Selection
         /// </summary>
         /// <returns></returns>
         Acp GetSelection();
+
         /// <summary>
         /// Get Selection state
         /// </summary>
         /// <returns></returns>
         SelState GetSelState();
+
         /// <summary>
         /// The QueryInsert method determines whether the specified start and end character positions are valid.
         /// Use this method to adjust an edit to a document before executing the edit. The method must not return values outside the range of the document.
@@ -59,16 +65,19 @@ namespace StardewValley.Menus
         /// If this parameter is -1, then pacpResultStart is set to -1 and text cannot be inserted at the specified position. This value cannot be outside the document range.
         /// </returns>
         Acp QueryInsert(Acp acp, uint cch);
+
         /// <summary>
         /// Replace TextBox's Text base on its current selection
         /// </summary>
         /// <param name="text">Replace text</param>
         void ReplaceSelection(string text);
+
         /// <summary>
         /// Get TextBox's Text Length
         /// </summary>
         /// <returns>Text Length</returns>
         int GetTextLength();
+
         /// <summary>
         /// Get Text ACP Position by Screen pos Rect
         /// </summary>
@@ -79,16 +88,18 @@ namespace StardewValley.Menus
         /// if overlap TextBox and the right pos < string's left pos, return acpStart = acpEnd = 0
         /// </returns>
         Acp GetAcpByRange(RECT rect);
+
         /// <summary>
         /// The GetTextExt method returns the bounding box, in world coordinates, of the text at a specified character position.
         /// </summary>
         /// <param name="acp">
-        /// Specifies the character position of the text to get in the document.    
+        /// Specifies the character position of the text to get in the document.
         /// </param>
         /// <returns>
         /// the bounding box in screen coordinates of the text at the specified character positions.
         /// </returns>
         RECT GetTextExt(Acp acp);
+
         /// <summary>
         /// Allow IME start composition
         /// </summary>
@@ -106,6 +117,7 @@ namespace StardewValley.Menus
             Start = start;
             End = end;
         }
+
         public Acp(Acp acp)
         {
             Start = acp.Start;
@@ -128,10 +140,12 @@ namespace StardewValley.Menus
         /// Nothing selected
         /// </summary>
         SEL_AE_NONE,
+
         /// <summary>
         /// Selection start at acp.Start
         /// </summary>
         SEL_AE_START,
+
         /// <summary>
         /// Selection start at acp.End
         /// </summary>

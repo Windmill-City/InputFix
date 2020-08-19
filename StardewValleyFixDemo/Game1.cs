@@ -1,4 +1,5 @@
 ﻿#define XNA
+
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,8 +16,8 @@ namespace StardewValley
     public class Game1 : Game
     {
         public static LocalizedContentManager content;
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        private GraphicsDeviceManager graphics;
+        private SpriteBatch spriteBatch;
         public static int gameMode = 0;
         public static KeyboardDispatcher keyboardDispatcher;
         public static Game1 game1;
@@ -38,19 +39,19 @@ namespace StardewValley
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
             game1 = this;
-
         }
 
         protected override void Initialize()
         {
-
             keyboardDispatcher = new KeyboardDispatcher(this.Window);
 #if TSF
             InitTSF();
 #endif
             base.Initialize();
         }
+
 #if TSF
+
         private void InitTSF()
         {
             tsf = new TSF();//Need to init at STA Thread
@@ -72,13 +73,17 @@ namespace StardewValley
             harmony.Patch(m_idle, null, new HarmonyMethod(typeof(Game1), "HandleMsgFirst"));//need to handle msg first, or the game will struck after IME actived
 #endif
         }
+
 #endif
 #if TSF
+
         private static void HandleMsgFirst()
         {
             tsf.PumpMsg(Game1.game1.Window.Handle);
         }
+
 #endif
+
         protected internal virtual LocalizedContentManager CreateContentManager(IServiceProvider serviceProvider, string rootDirectory)
         {
             return new LocalizedContentManager(serviceProvider, rootDirectory);
@@ -86,7 +91,6 @@ namespace StardewValley
 
         protected override void LoadContent()
         {
-
             spriteBatch = new SpriteBatch(GraphicsDevice);
             content = this.CreateContentManager(base.Content.ServiceProvider, base.Content.RootDirectory);
             chatboxtexture = content.Load<Texture2D>("chatBox");
@@ -107,7 +111,9 @@ namespace StardewValley
         protected override void UnloadContent()
         {
         }
-        bool rightmouse = false;
+
+        private bool rightmouse = false;
+
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
@@ -138,25 +144,31 @@ namespace StardewValley
             spriteBatch.End();
             base.Draw(gameTime);
         }
+
         public static KeyboardState GetKeyboardState()
         {
             KeyboardState keyState = Keyboard.GetState();
             return keyState;
         }
+
         public static int getMouseX()
         {
             return (int)((float)Game1.input.GetMouseState().X * (1f / Game1.options.zoomLevel));
         }
+
         public static int getMouseY()
         {
             return (int)((float)Game1.input.GetMouseState().Y * (1f / Game1.options.zoomLevel));
         }
+
         public static void showTextEntry(StardewValley.Menus.TextBox text_box)
         {
         }
+
         public static void playSound(string cueName)
         {
         }
+
         public static void SetFreeCursorDrag()
         {
         }

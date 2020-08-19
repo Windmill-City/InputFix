@@ -1,15 +1,14 @@
-
 #include "TSF.h"
 #include "TextEdit.h"
 
 TSF::TSF() {
 	//CoUninitialize();//UnSafe!!!Force change MTA Thread to STA Thread!
 	HRESULT hr = CoInitialize(NULL);//A STA Thread is required or TSF wont work
-	CheckHr(hr,"Failed to CoInitialize, need to run at a STA Thread");
+	CheckHr(hr, "Failed to CoInitialize, need to run at a STA Thread");
 
 	Pin(mgr, ITfThreadMgr*)
-	hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)p_mgr);
-	CheckHr(hr,"Failed to create ThreadMgr");
+		hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)p_mgr);
+	CheckHr(hr, "Failed to create ThreadMgr");
 
 	Pin(DocMgr, ITfDocumentMgr*);
 	hr = mgr->CreateDocumentMgr(p_DocMgr);
@@ -82,7 +81,7 @@ void TSF::CreateContext(_Handle ptr) {
 	edit = new TextEdit(ToHWND(ptr));
 	Pin(context, ITfContext*);
 	Pin(EditCookie, TfEditCookie)
-	HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
+		HRESULT hr = DocMgr->CreateContext(id, 0, edit, p_context, p_EditCookie);
 	CheckHr(hr, "Failed to create Context");
 
 	edit->editcookie = EditCookie;
@@ -147,7 +146,7 @@ void TSF::SetFocus() {
 
 void TSF::AssociateFocus(_Handle hwnd) {
 	ITfDocumentMgr* prev_DocMgr;
-	mgr->AssociateFocus(ToHWND(hwnd),DocMgr, &prev_DocMgr);
+	mgr->AssociateFocus(ToHWND(hwnd), DocMgr, &prev_DocMgr);
 	if (prev_DocMgr && prev_DocMgr != DocMgr) {
 		prev_DocMgr->Release();
 	}
@@ -162,7 +161,7 @@ void TSF::PumpMsg(_Handle hwnd)
 {
 	MSG msg;
 	BOOL    fResult = TRUE;
-	while (SUCCEEDED(pump->PeekMessage(&msg, ToHWND(hwnd), 0, 0, PM_REMOVE, &fResult)) && fResult) 
+	while (SUCCEEDED(pump->PeekMessage(&msg, ToHWND(hwnd), 0, 0, PM_REMOVE, &fResult)) && fResult)
 	{
 		BOOL    fEaten;
 		if (WM_KEYDOWN == msg.message)
@@ -192,7 +191,6 @@ void TSF::PumpMsg(_Handle hwnd)
 
 		if (fResult)
 		{
-
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}

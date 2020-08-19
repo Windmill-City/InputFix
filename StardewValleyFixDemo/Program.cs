@@ -4,12 +4,14 @@ using System;
 namespace StardewValley
 {
 #if WINDOWS || LINUX
+
     /// <summary>
     /// The main class.
     /// </summary>
     public static class Program
     {
         private static SDKHelper _sdk;
+
         public static SDKHelper sdk
         {
             get
@@ -21,15 +23,17 @@ namespace StardewValley
                 return Program._sdk;
             }
         }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             using (var game = new Game1())
                 game.Run();
         }
     }
+
 #endif
 }

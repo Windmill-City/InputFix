@@ -1,5 +1,4 @@
-﻿using BsDiff;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 
@@ -37,7 +36,7 @@ namespace Patcher
             Console.ReadKey();
         }
 
-        static void GenerateDlls()
+        private static void GenerateDlls()
         {
             FileStream file_TSF = new FileStream("TSF.dll", FileMode.OpenOrCreate, FileAccess.ReadWrite);
             file_TSF.Write(Resource1.TSF, 0, Resource1.TSF.Length);
@@ -47,7 +46,7 @@ namespace Patcher
             file_0Harmony.Close();
         }
 
-        static void CreateSDVPatch()
+        private static void CreateSDVPatch()
         {
             Console.WriteLine("[Info]Creating patch file, please wait...");
             Stream stream = CreateSDVPatch("F:\\SteamLibrary\\steamapps\\common\\Stardew Valley\\Stardew Valley_Source.exe", "F:\\SteamLibrary\\steamapps\\common\\Stardew Valley\\Stardew Valley_InputFixed.exe");
@@ -63,12 +62,12 @@ namespace Patcher
             Console.WriteLine("[Info]Created patch file");
         }
 
-        static bool PatchSDV()
+        private static bool PatchSDV()
         {
             Console.WriteLine("[Info]Patching, please wait...");
 
             var softwareVersion = Assembly.LoadFile(System.IO.Directory.GetCurrentDirectory() + "\\Stardew Valley.exe").GetName().Version.ToString();
-            if(softwareVersion != "1.3.7346.34283")
+            if (softwareVersion != "1.3.7346.34283")
             {
                 Console.WriteLine("[Error]Your StardewValley version is " + softwareVersion);
                 Console.WriteLine("[Error]This patch only for StardewValley 1.4.5 | 1.3.7346.34283");

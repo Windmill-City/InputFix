@@ -9,11 +9,13 @@ namespace StardewValley.Menus
     public class ChatTextBox : TextBox
     {
         #region Vars
+
         public IClickableMenu parentMenu;
 
         public List<ChatSnippet> finalText = new List<ChatSnippet>();
 
         public float currentWidth;
+
         public virtual int X
         {
             get
@@ -26,6 +28,7 @@ namespace StardewValley.Menus
                 DrawOrigin.X = _X + 12f;
             }
         }
+
         public virtual int Y
         {
             get
@@ -38,8 +41,11 @@ namespace StardewValley.Menus
                 DrawOrigin.Y = _Y + 12f;
             }
         }
+
         #endregion Vars
+
         #region ChatTextBox
+
         public ChatTextBox(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor) : base(textBoxTexture, caretTexture, font, textColor)
         {
         }
@@ -48,6 +54,7 @@ namespace StardewValley.Menus
         {
             SetText("");
         }
+
         public void updateWidth()
         {
             currentWidth = 0f;
@@ -60,6 +67,7 @@ namespace StardewValley.Menus
                 currentWidth += cs.myLength;
             }
         }
+
         public void receiveEmoji(int emoji)
         {
             ReplaceSelection("");
@@ -73,7 +81,7 @@ namespace StardewValley.Menus
             {
                 ChatSnippet item = finalText[i];
                 index += item.emojiIndex != -1 ? 1 : item.message.Length;
-                if (index == acp.Start)//[text message/emoji][caret] 
+                if (index == acp.Start)//[text message/emoji][caret]
                 {
                     finalText.Insert(i + 1, chatSnippet);
                     goto FinalEmoji;
@@ -99,8 +107,11 @@ namespace StardewValley.Menus
 #endif
             return;
         }
+
         #endregion ChatTextBox
+
         #region ITextBox
+
         public override void SetText(string str)
         {
             currentWidth = 0;
@@ -115,6 +126,7 @@ namespace StardewValley.Menus
 #endif
             RecieveTextInput(str);
         }
+
         public override string GetText()
         {
             StringBuilder sb = new StringBuilder(GetTextLength());
@@ -131,6 +143,7 @@ namespace StardewValley.Menus
             }
             return sb.ToString();
         }
+
         public override int GetTextLength()
         {
             int len = 0;
@@ -140,6 +153,7 @@ namespace StardewValley.Menus
             }
             return len;
         }
+
         public override Acp GetAcpByRange(RECT rect)
         {
             Acp result = new Acp();
@@ -233,6 +247,7 @@ namespace StardewValley.Menus
             }
             return result;
         }
+
         public override RECT GetTextExt(Acp acp)
         {
             var test_len = GetTextLength();
@@ -401,8 +416,11 @@ namespace StardewValley.Menus
             //IME input dont play sound, english input sound is handled at IKeyboadSubscriber
             //Game1.playSound("cowboy_monsterhit");//TSF may replace some word, which will make the sound strange
         }
+
         #endregion ITextBox
+
         #region Draw
+
         public override void Draw(SpriteBatch spriteBatch, bool drawShadow = true)
         {
             DrawBackGround(spriteBatch);
@@ -417,6 +435,7 @@ namespace StardewValley.Menus
             else
                 DrawByAcp(spriteBatch, new Acp(0, GetTextLength()), ref xPositionSoFar, TextColor, drawShadow);
         }
+
         protected override void DrawByAcp(SpriteBatch spriteBatch, Acp acp, ref float offset, Color color, bool drawShadow = true)
         {
             var start = Math.Min(acp.Start, acp.End);
@@ -484,6 +503,7 @@ namespace StardewValley.Menus
         Finish:
             return;
         }
+
         public virtual void DrawChatSnippet(SpriteBatch spriteBatch, ChatSnippet snippet, ref float offset, bool drawShadow = true)
         {
             if (snippet.emojiIndex != -1)
@@ -519,9 +539,12 @@ namespace StardewValley.Menus
             }
             offset += snippet.myLength;
         }
+
         #endregion Draw
     }
+
     #region ChatSnippet
+
     public class ChatSnippet
     {
         public string message;
@@ -543,5 +566,6 @@ namespace StardewValley.Menus
             myLength = 40f;
         }
     }
+
     #endregion ChatSnippet
 }

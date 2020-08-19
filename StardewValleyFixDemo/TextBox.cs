@@ -10,7 +10,9 @@ namespace StardewValley.Menus
     public class TextBox : ITextBox
     {
         #region Vars
-        SpriteFont _font;
+
+        private SpriteFont _font;
+
         public SpriteFont Font
         {
             get
@@ -18,7 +20,9 @@ namespace StardewValley.Menus
                 return _font;
             }
         }
-        Color _textColor;
+
+        private Color _textColor;
+
         public Color TextColor
         {
             get
@@ -26,7 +30,9 @@ namespace StardewValley.Menus
                 return _textColor;
             }
         }
+
         protected int _X;
+
         public virtual int X
         {
             get
@@ -39,7 +45,9 @@ namespace StardewValley.Menus
                 DrawOrigin.X = _X + 16f;
             }
         }
+
         protected int _Y;
+
         public virtual int Y
         {
             get
@@ -52,11 +60,13 @@ namespace StardewValley.Menus
                 DrawOrigin.Y = _Y + 8f;
             }
         }
+
         public int Width { get; set; }
         public int Height { get; set; }
         public bool PasswordBox { get; set; }
 
         public bool limitWidth = true;
+
         public string Text
         {
             get
@@ -68,7 +78,9 @@ namespace StardewValley.Menus
                 SetText(value);
             }
         }
-        bool _selected;
+
+        private bool _selected;
+
         public bool Selected
         {
             get
@@ -98,6 +110,7 @@ namespace StardewValley.Menus
                 }
             }
         }
+
         public bool numbersOnly = false;
         public int textLimit = -1;
 
@@ -106,16 +119,23 @@ namespace StardewValley.Menus
         protected Texture2D _caretTexture;
 
         //just for arrow key/mouse selection, dont use it to handle text change
-        SelState selState = SelState.SEL_AE_NONE;
-        bool _showKeyboard;
-        StringBuilder text = new StringBuilder();
+        private SelState selState = SelState.SEL_AE_NONE;
+
+        private bool _showKeyboard;
+        private StringBuilder text = new StringBuilder();
+
         #endregion Vars
+
         #region TextBox
+
         public delegate void TextBoxEvent(TextBox sender);
 
         public event TextBoxEvent OnEnterPressed;
+
         public event TextBoxEvent OnTabPressed;
+
         public event TextBoxEvent OnBackspacePressed;
+
         public TextBox(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor)
         {
             _textBoxTexture = textBoxTexture;
@@ -128,10 +148,12 @@ namespace StardewValley.Menus
             _font = font;
             _textColor = textColor;
         }
+
         public void SelectMe()
         {
             Selected = true;
         }
+
         public void Update()
         {
             Game1.input.GetMouseState();
@@ -154,6 +176,7 @@ namespace StardewValley.Menus
                 _showKeyboard = false;
             }
         }
+
         public void Hover(int x, int y)
         {
             if (x > X && x < X + Width && y > Y && y < Y + Height)
@@ -161,8 +184,11 @@ namespace StardewValley.Menus
                 Game1.SetFreeCursorDrag();
             }
         }
+
         #endregion TextBox
+
         #region ITextBox
+
         protected Acp acp = new Acp();
 
         public virtual Acp GetSelection()
@@ -181,12 +207,14 @@ namespace StardewValley.Menus
                         selState = SelState.SEL_AE_NONE;
                     }
                     break;
+
                 case SelState.SEL_AE_NONE:
                     if (acp.Start != acp.End)
                     {
                         selState = SelState.SEL_AE_START;
                     }
                     break;
+
                 default:
                     break;
             }
@@ -341,8 +369,11 @@ namespace StardewValley.Menus
                 return !numbersOnly;
             }
         }
+
         #endregion ITextBox
+
         #region IKeyboardSubscriber
+
         public virtual void RecieveCommandInput(char command)//IME will handle key event first, so these method just for english input(if it is using IME, we need to notify TSF)
         {
             switch (command)
@@ -371,12 +402,15 @@ namespace StardewValley.Menus
                     }
                     OnBackspacePressed?.Invoke(this);
                     break;
+
                 case '\r':
                     OnEnterPressed?.Invoke(this);
                     break;
+
                 case '\t':
                     OnTabPressed?.Invoke(this);
                     break;
+
                 default:
                     break;
             }
@@ -405,6 +439,7 @@ namespace StardewValley.Menus
                                     acp.End = acp.Start;
                                 }
                                 break;
+
                             case SelState.SEL_AE_END:
                                 if (shiftPressed)
                                 {
@@ -418,6 +453,7 @@ namespace StardewValley.Menus
                                     acp.End = acp.Start;
                                 }
                                 break;
+
                             case SelState.SEL_AE_NONE:
                                 if (shiftPressed)
                                 {
@@ -433,6 +469,7 @@ namespace StardewValley.Menus
                         goto HasUpdated;
                     }
                     break;
+
                 case Keys.Right:
                     var len = GetTextLength();
                     if (acp.Start < len || acp.End < len)
@@ -452,6 +489,7 @@ namespace StardewValley.Menus
                                     acp.Start = acp.End;
                                 }
                                 break;
+
                             case SelState.SEL_AE_END:
                                 if (shiftPressed)
                                 {
@@ -465,6 +503,7 @@ namespace StardewValley.Menus
                                     acp.Start = acp.End;
                                 }
                                 break;
+
                             case SelState.SEL_AE_NONE:
                                 if (shiftPressed)
                                 {
@@ -480,6 +519,7 @@ namespace StardewValley.Menus
                         goto HasUpdated;
                     }
                     break;
+
                 default:
                     break;
             }
@@ -508,21 +548,27 @@ namespace StardewValley.Menus
                     {
                         case "\"":
                             return;
+
                         case "$":
                             Game1.playSound("money");
                             break;
+
                         case "*":
                             Game1.playSound("hammer");
                             break;
+
                         case "+":
                             Game1.playSound("slimeHit");
                             break;
+
                         case "<":
                             Game1.playSound("crystal");
                             break;
+
                         case "=":
                             Game1.playSound("coin");
                             break;
+
                         default:
                             Game1.playSound("cowboy_monsterhit");
                             break;
@@ -544,7 +590,9 @@ namespace StardewValley.Menus
 #endif
             }
         }
+
         #endregion IKeyboardSubscriber
+
         #region Draw
 
         public virtual void Draw(SpriteBatch spriteBatch, bool drawShadow = true)
@@ -560,7 +608,6 @@ namespace StardewValley.Menus
             }
             else
                 DrawByAcp(spriteBatch, new Acp(0, GetTextLength()), ref offset, TextColor, drawShadow);
-
         }
 
         protected virtual void DrawByAcp(SpriteBatch spriteBatch, Acp acp, ref float offset, Color color, bool drawShadow = true)
@@ -608,6 +655,7 @@ namespace StardewValley.Menus
             else
                 Game1.drawDialogueBox(X - 32, Y - 112 + 10, Width + 80, Height, false, true, null, false, true, -1, -1, -1);
         }
+
         #endregion Draw
     }
 }

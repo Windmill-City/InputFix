@@ -64,7 +64,9 @@ namespace InputFix
         #endregion Vars
 
         public new event TextBoxEvent OnEnterPressed;
+
         public new event TextBoxEvent OnTabPressed;
+
         public new event TextBoxEvent OnBackspacePressed;
 
         public TextBox_(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor) : base(textBoxTexture, caretTexture, font, textColor)

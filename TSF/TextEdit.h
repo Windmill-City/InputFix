@@ -18,7 +18,6 @@ INITGUID.H just before the first time you include TSATTRS.H
 #define DEBUG(x)
 #endif // DEBUG
 
-
 /**************************************************************************
    global variables and definitions
 **************************************************************************/
@@ -42,9 +41,9 @@ typedef struct
 }ADVISE_SINK, * PADVISE_SINK;
 typedef struct
 {
-    LONG acpStart;
-    LONG acpEnd;
-}ACP,*PACP;
+	LONG acpStart;
+	LONG acpEnd;
+}ACP, * PACP;
 /**************************************************************************
 
    TextEdit class definition
@@ -64,7 +63,7 @@ private:
 	TsActiveSelEnd          m_ActiveSelEnd;
 	//TextStoreSink
 	ADVISE_SINK             m_AdviseSink;
-	ITextStoreACPServices*  m_pServices;
+	ITextStoreACPServices* m_pServices;
 	BOOL                    m_fNotify;
 	//DocLock
 	BOOL                    m_fLocked;
@@ -76,9 +75,9 @@ private:
 	BOOL                    m_fLayoutChanged;
 public:
 	TfEditCookie            editcookie;
-	ITfContext*             context;
-	ITfProperty*            attr_prop;
-	ITfCategoryMgr*			CategoryMgr;
+	ITfContext* context;
+	ITfProperty* attr_prop;
+	ITfCategoryMgr* CategoryMgr;
 	ITfDisplayAttributeMgr* DispMgr;
 
 	TextEdit(HWND hWnd);

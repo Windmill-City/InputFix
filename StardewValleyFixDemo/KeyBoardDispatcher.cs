@@ -7,6 +7,7 @@ namespace StardewValley
     public class KeyboardDispatcher
     {
         private IKeyboardSubscriber _subscriber;
+
         public KeyboardDispatcher(GameWindow window)
         {
             KeyboardInput.Initialize(window);

@@ -20,7 +20,6 @@ if (FAILED(hr))\
 #define ToHWND(x) x
 #endif
 
-
 #include <msctf.h>
 #include <olectl.h>
 #include "TextEdit.h"
@@ -37,41 +36,40 @@ if (FAILED(hr))\
 #define REFCLASS class __declspec(dllexport)
 #endif // MANAGED
 
-REFCLASS TSF {
-    ITfThreadMgr* mgr;
-    ITfDocumentMgr* DocMgr;
-    ITfContextOwnerCompositionServices* services;
-    ITfMessagePump* pump;
-    ITfKeystrokeMgr* KeyMgr;
-    ITfCategoryMgr* CategoryMgr;
-    ITfDisplayAttributeMgr* DispMgr;
-    ITfUIElementMgr* UIMgr;
+REFCLASS TSF{
+	ITfThreadMgr * mgr;
+	ITfDocumentMgr* DocMgr;
+	ITfContextOwnerCompositionServices* services;
+	ITfMessagePump* pump;
+	ITfKeystrokeMgr* KeyMgr;
+	ITfCategoryMgr* CategoryMgr;
+	ITfDisplayAttributeMgr* DispMgr;
+	ITfUIElementMgr* UIMgr;
 
-    TfClientId id;
-    ITfContext* context;
+	TfClientId id;
+	ITfContext* context;
 
-    TextEdit* edit;
+	TextEdit* edit;
 
-    TfEditCookie EditCookie;
-    DWORD attrcookie;
+	TfEditCookie EditCookie;
+	DWORD attrcookie;
 public:
-    TSF();
-    ~TSF();
+	TSF();
+	~TSF();
 
-    void Active();
-    void Deactive();
-    void CreateContext(_Handle);
-    void PushContext();
-    void PopContext();
-    void ReleaseContext();
-    void SetEnable(bool enable);
-    void ClearText();
-    void onTextChange();
-    void onSelChange();
-    void SetFocus();
-    void AssociateFocus(_Handle);
-    void PumpMsg(_Handle hwnd);
+	void Active();
+	void Deactive();
+	void CreateContext(_Handle);
+	void PushContext();
+	void PopContext();
+	void ReleaseContext();
+	void SetEnable(bool enable);
+	void ClearText();
+	void onTextChange();
+	void onSelChange();
+	void SetFocus();
+	void AssociateFocus(_Handle);
+	void PumpMsg(_Handle hwnd);
 
-    void TerminateComposition();
+	void TerminateComposition();
 };
-
