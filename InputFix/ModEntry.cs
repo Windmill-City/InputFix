@@ -1,6 +1,4 @@
 ﻿using Harmony;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -22,17 +20,14 @@ namespace InputFix
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
-            monitor = this.Monitor;
+            monitor = Monitor;
             _helper = helper;
 
             KeyboardInput_.Initialize(Game1.game1.Window);
 
             RegCommand(helper);
-
-            HarmonyInstance harmony = HarmonyInstance.Create(base.ModManifest.UniqueID);
-
-            MethodInfo m_selected = typeof(KeyboardDispatcher).GetMethod("set_Subscriber", BindingFlags.Public | BindingFlags.Instance);
-            harmony.Patch(m_selected, null, new HarmonyMethod(typeof(Overrides), "Subscriber_Set"));
+            HarmonyInstance harmony = HarmonyInstance.Create(ModManifest.UniqueID);
+            harmony.PatchAll();
 
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
@@ -40,20 +35,6 @@ namespace InputFix
                 monitor.Log("Compatible with ChatCommands", LogLevel.Info);
                 Compatibility.PatchChatCommands(monitor, harmony);
             }
-            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
-        }
-
-        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
-        {
-            //replace ChatTextBox
-            Texture2D texture2D = Game1.content.Load<Texture2D>("LooseSprites\\chatBox");
-            ChatTextBox_ chatTextBox_ = new ChatTextBox_(texture2D, null, Game1.smallFont, Color.White);
-            chatTextBox_.OnEnterPressed += new TextBoxEvent(Game1.chatBox.textBoxEnter);
-            chatTextBox_.X = Game1.chatBox.chatBox.X;
-            chatTextBox_.Y = Game1.chatBox.chatBox.Y;
-            chatTextBox_.Width = Game1.chatBox.chatBox.Width;
-            chatTextBox_.Height = Game1.chatBox.chatBox.Height;
-            Game1.chatBox.chatBox = chatTextBox_;
         }
 
         private void RegCommand(IModHelper helper)

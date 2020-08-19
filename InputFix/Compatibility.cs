@@ -14,27 +14,31 @@ namespace InputFix
             {
                 monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
                 MethodInfo m_draw2 = CCTB.GetMethod("Draw", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxDrawStart"));
+                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxDrawStart"));
 
                 MethodInfo m_emoji = CCTB.GetMethod("ReceiveEmoji", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_emoji, new HarmonyMethod(typeof(Overrides), "receiveEmoji"));
-
-                MethodInfo m_load = CCTB.GetMethod("Load", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_load, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
-
-                MethodInfo m_reset = CCTB.GetMethod("Reset", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_reset, null, new HarmonyMethod(typeof(Overrides), "TextBox_Text"));
+                harmony.Patch(m_emoji, new HarmonyMethod(typeof(Compatibility), "receiveEmoji"));
 
                 MethodInfo m_leftarrow = CCTB.GetMethod("OnLeftArrowPress", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxOnArrow"));
+                harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
                 MethodInfo m_rightarrow = CCTB.GetMethod("OnRightArrowPress", BindingFlags.Public | BindingFlags.Instance);
-                harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Overrides), "CommandChatTextBoxOnArrow"));
+                harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
             }
             else
             {
                 monitor.Log("CommandChatTextBox NOT FOUND", LogLevel.Error);
             }
+        }
+
+        public static bool CommandChatTextBoxDrawStart()
+        {
+            return false;
+        }
+
+        public static bool CommandChatTextBoxOnArrow()
+        {
+            return false;
         }
 
         public static Type getByFullName(string typeName)

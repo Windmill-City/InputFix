@@ -1,12 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace StardewValley.Menus
+namespace InputFix
 {
-    //TSF only can be use on Windows, you can change global define in Project->Properties -> Build -> Conditional compilation symbols
     /// <summary>
     /// The ITextBox interface can be use on LINUX and Windows, which enables TextBox's caret move and text insert
     /// </summary>
-    public interface ITextBox : IKeyboardSubscriber
+    public interface ITextBox
     {
         /// <summary>
         /// Clear and Set TextBox's Text

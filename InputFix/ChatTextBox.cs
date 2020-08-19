@@ -49,7 +49,9 @@ namespace InputFix
         #region ChatTextBox
 
         public new event TextBoxEvent OnEnterPressed;
+
         public new event TextBoxEvent OnTabPressed;
+
         public new event TextBoxEvent OnBackspacePressed;
 
         public ChatTextBox_(Texture2D textBoxTexture, Texture2D caretTexture, SpriteFont font, Color textColor) : base(textBoxTexture, caretTexture, font, textColor)
@@ -248,13 +250,16 @@ namespace InputFix
             if (acp.End > test_len)
                 acp.End = test_len;
             RECT rect = new RECT();
+            rect.left = (int)DrawOrigin.X;
+
             var start = Math.Min(acp.Start, acp.End);
             var end = Math.Max(acp.Start, acp.End);
+            //Empty request
             if (end == 0 || start == GetTextLength())
             {
-                return rect;
+                goto Finish;
             }
-            rect.left = (int)DrawOrigin.X;
+
             int index = 0;
             bool foundstart = start == 0;
             if (foundstart)

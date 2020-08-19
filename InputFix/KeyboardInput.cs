@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.Menus;
@@ -102,8 +103,19 @@ namespace InputFix
             CharEntered?.Invoke(null, new CharacterEventArgs(e.Character, 0));
         }
 
+        private static string compStr;
+
         private static void InputMethod_TextComposition(object sender, ImeSharp.TextCompositionEventArgs e)
         {
+            compStr = e.CompositionText.ToString();
+            ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
+            if (textBox_ != null && textBox_.AllowIME)
+            {
+                Vector2 vector2 = Game1.smallFont.MeasureString(compStr);
+                Acp acp = textBox_.GetSelection();
+                RECT rECT = textBox_.GetTextExt(new Acp(0, acp.Start));
+                ImeSharp.InputMethod.SetTextInputRect(rECT.right, rECT.top, (int)vector2.X, (int)vector2.Y);
+            }
         }
 
         #endregion HandleImeSharpEvent
