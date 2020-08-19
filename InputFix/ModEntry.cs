@@ -3,7 +3,6 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
-using System.Reflection;
 
 namespace InputFix
 {
@@ -98,7 +97,7 @@ namespace InputFix
                     return;
                 if (Game1.gameMode != 3)
                 {
-                    ModEntry.monitor.Log("Not In Playing Mode", LogLevel.Error);
+                    monitor.Log("Not In Playing Mode", LogLevel.Error);
                     return;
                 }
                 Game1.game1.parseDebugInput("warp AnimalShop");
@@ -109,7 +108,7 @@ namespace InputFix
             {
                 Game1.debugMode = !Game1.debugMode;
                 Program.releaseBuild = !Game1.debugMode;
-                string str = String.Format("Debug:{0}", Game1.debugMode);
+                string str = string.Format("Debug:{0}", Game1.debugMode);
                 monitor.Log(str, LogLevel.Info);
             }));
         }

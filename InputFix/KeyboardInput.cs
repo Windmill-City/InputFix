@@ -1,11 +1,8 @@
 ﻿using Harmony;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
-using StardewValley.Menus;
 using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace InputFix
