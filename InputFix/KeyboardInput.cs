@@ -1,7 +1,9 @@
 ﻿using Harmony;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
+using StardewValley.Menus;
 using System;
 using System.Runtime.InteropServices;
 
@@ -65,7 +67,14 @@ namespace InputFix
 
             CharEntered += KeyboardInput__CharEntered;
             KeyDown += KeyboardInput__KeyDown;
+
+            ModEntry._helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu; ;
             initialized = true;
+        }
+
+        private static void Display_RenderedActiveMenu(object sender, StardewModdingAPI.Events.RenderedActiveMenuEventArgs e)
+        {
+            DrawComp(e.SpriteBatch);
         }
 
         #region KeyboardDispatcher
@@ -108,13 +117,74 @@ namespace InputFix
         {
             compStr = e.CompositionText.ToString();
             compSel = e.CursorPosition;
+
             ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
+            TextBox textBox = Game1.keyboardDispatcher.Subscriber as TextBox;
+
+            Vector2 vector2 = textBox.Font.MeasureString(compStr);
             if (textBox_ != null && textBox_.AllowIME)
             {
-                Vector2 vector2 = Game1.smallFont.MeasureString(compStr);
                 Acp acp = textBox_.GetSelection();
                 RECT rECT = textBox_.GetTextExt(new Acp(0, acp.Start));
                 ImeSharp.InputMethod.SetTextInputRect(rECT.right, rECT.top, (int)vector2.X, 32);
+            }
+            else if (textBox != null && textBox_ == null)//without ITextBox interface
+            {
+                ImeSharp.InputMethod.SetTextInputRect(
+                    //if without textbox, we can only insert at end
+                    textBox.X + (int)textBox.Font.MeasureString(textBox.Text).X + (textBox is TextBox ? 16 : 12),
+                    textBox.Y,
+                    (int)vector2.X,
+                    32);
+            }
+        }
+
+        public static void DrawComp(SpriteBatch spriteBatch)
+        {
+            //cache text, in case change by ime
+            string compStr = KeyboardInput_.compStr;
+            int curSel = Math.Min(KeyboardInput_.compStr.Length, compSel);
+
+            ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
+            TextBox textBox = Game1.keyboardDispatcher.Subscriber as TextBox;
+
+            if (compStr.Length > 0 && textBox != null)
+            {
+                int drawY = textBox.Y + (textBox is TextBox ? 8 : 12);
+                //compstr draw at the caret pos
+                float offset = textBox_ != null ?
+                    textBox_.GetTextExt(new Acp(textBox_.GetSelection().Start, textBox_.GetSelection().Start)).left
+                    : textBox.Font.MeasureString(textBox.Text).X + textBox.X + (textBox is TextBox ? 16 : 12);
+                //devide the compstr by compsel
+                string left = compStr.Substring(0, curSel);
+                string right = compStr.Substring(curSel, compStr.Length - curSel);
+                //measure len
+                Vector2 vec_left = textBox.Font.MeasureString(left);
+                Vector2 vec_right = textBox.Font.MeasureString(right);
+                //Draw background
+                Texture2D Rect = new Texture2D(Game1.game1.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                Color[] colors = new Color[1];
+                Rect.GetData(colors);
+                colors[0] = Color.White;
+                Rect.SetData(colors);
+                spriteBatch.Draw(Rect, new Rectangle((int)offset,
+                    drawY,
+                    (int)(vec_left.X + vec_right.X + 10),//plus 10 to make the bounding box a bit larger, or the caret may not visable
+                    32),
+                    Color.White);
+
+                offset += 4;//make items in the white background
+                //Draw left part
+                spriteBatch.DrawString(textBox.Font, left, new Vector2(offset, drawY), Color.Black);
+                offset += vec_left.X;
+                //Draw caret
+                bool caretVisible = DateTime.UtcNow.Millisecond % 1000 >= 500;
+                if (caretVisible)
+                {
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)offset, drawY, 2, 32), Color.Black);
+                }
+                //Draw right part
+                spriteBatch.DrawString(textBox.Font, right, new Vector2(offset, drawY), Color.Black);
             }
         }
 

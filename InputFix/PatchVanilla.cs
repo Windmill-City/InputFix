@@ -19,7 +19,8 @@ namespace InputFix
         {
             //Dont change except mainthread
             if (ModEntry.isMainThread())
-                if (Game1.keyboardDispatcher.Subscriber is ITextBox && (Game1.keyboardDispatcher.Subscriber as ITextBox).AllowIME)
+                if ((Game1.keyboardDispatcher.Subscriber is ITextBox && (Game1.keyboardDispatcher.Subscriber as ITextBox).AllowIME)
+                    || (Game1.keyboardDispatcher.Subscriber is TextBox && !(Game1.keyboardDispatcher.Subscriber as TextBox).numbersOnly))
                 {
                     ImeSharp.InputMethod.Enabled = true;
                 }
@@ -95,6 +96,34 @@ namespace InputFix
     }
 
     #endregion NamingMenu
+
+    #region NumberSelectionMenu
+
+    [HarmonyPatch(typeof(NumberSelectionMenu), MethodType.Constructor)]
+    [HarmonyPatch(new Type[] { typeof(string),
+        typeof(NumberSelectionMenu.behaviorOnNumberSelect),
+        typeof(int),
+        typeof(int),
+        typeof(int),
+        typeof(int) })]
+    internal class PatchNumberSelectionMenu_ctor
+    {
+        private static void Postfix(NumberSelectionMenu __instance, ref TextBox ___numberSelectedBox)
+        {
+            //replace TextBox
+            TextBox_ textBox_ = new TextBox_(Game1.content.Load<Texture2D>("LooseSprites\\textBox"), null, Game1.smallFont, Game1.textColor);
+            textBox_.X = ___numberSelectedBox.X;
+            textBox_.Y = ___numberSelectedBox.Y;
+            textBox_.Width = ___numberSelectedBox.Width;
+            textBox_.Height = ___numberSelectedBox.Height;
+            textBox_.numbersOnly = true;
+            textBox_.textLimit = ___numberSelectedBox.textLimit;
+            textBox_.SetText(___numberSelectedBox.Text);
+            ___numberSelectedBox = textBox_;
+        }
+    }
+
+    #endregion NumberSelectionMenu
 
     #region PurchaseAnimalsMenu
 
@@ -208,7 +237,7 @@ namespace InputFix
 
     [HarmonyPatch(typeof(TextBox))]
     [HarmonyPatch("RecieveSpecialInput")]
-    internal class PatchChatBox_RecieveSpecialInput
+    internal class Patch_TextBox_RecieveSpecialInput
     {
         private static bool Prefix(TextBox __instance, Keys key)
         {
