@@ -21,9 +21,6 @@ namespace InputFix
                 MethodInfo m_draw2 = AccessTools.Method(CCTB, "Draw");
                 harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxDrawStart"));
 
-                MethodInfo m_emoji = AccessTools.Method(CCTB, "ReceiveEmoji");
-                harmony.Patch(m_emoji, new HarmonyMethod(typeof(Compatibility), "receiveEmoji"));
-
                 MethodInfo m_leftarrow = AccessTools.Method(CCTB, "OnLeftArrowPress");
                 harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
