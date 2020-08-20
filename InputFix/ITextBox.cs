@@ -84,7 +84,6 @@ namespace InputFix
         bool AllowIME { get; }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
     public struct Acp
     {
         public int Start;
@@ -103,7 +102,6 @@ namespace InputFix
         }
     };
 
-    [StructLayout(LayoutKind.Sequential)]
     public struct RECT
     {
         public int left;
