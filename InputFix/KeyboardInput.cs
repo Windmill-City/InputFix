@@ -68,7 +68,7 @@ namespace InputFix
             CharEntered += KeyboardInput__CharEntered;
             KeyDown += KeyboardInput__KeyDown;
 
-            ModEntry._helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu; ;
+            ModEntry._helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             initialized = true;
         }
 
@@ -128,10 +128,12 @@ namespace InputFix
             }
             else if (textBox != null)//without ITextBox interface
             {
+                int strLen = textBox is ChatTextBox ? (int)(textBox as ChatTextBox).currentWidth : (int)textBox.Font.MeasureString(textBox.Text).X;
+                int xOffset = textBox.X + strLen + (textBox is ChatTextBox ? 12 : 16);
                 ImeSharp.InputMethod.SetTextInputRect(
                     //if without textbox, we can only insert at end
-                    textBox.X + (int)textBox.Font.MeasureString(textBox.Text).X + (textBox is TextBox ? 16 : 12),
-                    textBox.Y,
+                    xOffset,
+                    textBox.Y + (textBox is ChatTextBox ? 12 : 8),
                     (int)vector2.X,
                     32);
             }

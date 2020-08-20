@@ -12,6 +12,9 @@ namespace InputFix
 {
     public class Compatibility
     {
+        public static bool ignore;
+        private static Composition comp;
+
         public static void PatchChatCommands(IMonitor monitor, HarmonyInstance harmony)
         {
             Type CCTB = AccessTools.TypeByName("ChatCommands.ClassReplacements.CommandChatTextBox");
@@ -19,16 +22,16 @@ namespace InputFix
             {
                 monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
                 MethodInfo m_draw2 = AccessTools.Method(CCTB, "Draw");
-                //harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxDrawStart"));
+                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "DrawBegin"),
+                    new HarmonyMethod(typeof(Compatibility), "DrawEnd"));
 
                 MethodInfo m_leftarrow = AccessTools.Method(CCTB, "OnLeftArrowPress");
-                //harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
+                harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
                 MethodInfo m_rightarrow = AccessTools.Method(CCTB, "OnRightArrowPress");
-                //harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
+                harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
-                List<ConstructorInfo> m_ctor = AccessTools.GetDeclaredConstructors(CCTB);
-                harmony.Patch(m_ctor[1], null, new HarmonyMethod(typeof(Compatibility), "onConstructChatBox"));
+                comp = (Composition)Traverse.Create(typeof(KeyboardInput_)).Field("comp").GetValue();
             }
             else
             {
@@ -36,27 +39,20 @@ namespace InputFix
             }
         }
 
-        public static void onConstructChatBox(ChatBox __instance)
+        private static void DrawBegin()
         {
-            //replace ChatTextBox
-            Texture2D texture2D = Game1.content.Load<Texture2D>("LooseSprites\\chatBox");
-            ChatTextBox_ chatTextBox_ = new ChatTextBox_(texture2D, null, Game1.smallFont, Color.White);
-            //chatTextBox_.OnEnterPressed += new TextBoxEvent());
-            chatTextBox_.X = __instance.chatBox.X;
-            chatTextBox_.Y = __instance.chatBox.Y;
-            chatTextBox_.Width = __instance.chatBox.Width;
-            chatTextBox_.Height = __instance.chatBox.Height;
-            __instance.chatBox = chatTextBox_;
+            ignore = true;
         }
 
-        public static bool CommandChatTextBoxDrawStart()
+        private static void DrawEnd(SpriteBatch spriteBatch)
         {
-            return false;
+            ignore = false;
+            comp.Draw(spriteBatch);
         }
 
         public static bool CommandChatTextBoxOnArrow()
         {
-            return false;
+            return comp.text.Length == 0;
         }
     }
 }
