@@ -6,7 +6,6 @@ using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 
 namespace InputFix
 {
@@ -244,7 +243,7 @@ namespace InputFix
 
             if (compStr.Length > 0 && textBox != null)
             {
-                bool isTextBox = textBox is TextBox;
+                bool isTextBox = !(textBox is ChatTextBox);
 
                 int xOffset = isTextBox ? TextBox_xOffset : ChatTextBox_xOffset;
                 int yOffset = isTextBox ? TextBox_yOffset : ChatTextBox_yOffset;
@@ -255,8 +254,10 @@ namespace InputFix
                     int acpStart = textBox_.GetSelection().Start;
                     DrawOrigin.X = textBox_.GetTextExt(new Acp(acpStart, acpStart)).left;
                 }
-                else
+                else if (isTextBox)
                     DrawOrigin.X += textBox.Font.MeasureString(textBox.Text).X;
+                else
+                    DrawOrigin.X += (textBox as ChatTextBox).currentWidth;
 
                 //devide the compstr by compsel
                 string left = compStr.Substring(0, curSel);

@@ -19,13 +19,13 @@ namespace InputFix
             {
                 monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
                 MethodInfo m_draw2 = AccessTools.Method(CCTB, "Draw");
-                harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxDrawStart"));
+                //harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxDrawStart"));
 
                 MethodInfo m_leftarrow = AccessTools.Method(CCTB, "OnLeftArrowPress");
-                harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
+                //harmony.Patch(m_leftarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
                 MethodInfo m_rightarrow = AccessTools.Method(CCTB, "OnRightArrowPress");
-                harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
+                //harmony.Patch(m_rightarrow, new HarmonyMethod(typeof(Compatibility), "CommandChatTextBoxOnArrow"));
 
                 List<ConstructorInfo> m_ctor = AccessTools.GetDeclaredConstructors(CCTB);
                 harmony.Patch(m_ctor[1], null, new HarmonyMethod(typeof(Compatibility), "onConstructChatBox"));
