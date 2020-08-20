@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace STALauncher.Properties
+namespace Patcher.Properties
 {
 
 
