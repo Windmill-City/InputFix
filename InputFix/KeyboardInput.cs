@@ -224,7 +224,7 @@ namespace InputFix
 
     public class Composition
     {
-        public string text;
+        public string text = "";
         public int caret;
 
         private const int TextBox_xOffset = 16;
