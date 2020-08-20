@@ -106,12 +106,12 @@ namespace InputFix
             comp.Draw(e.SpriteBatch);
         }
 
-        private static void InputMethod_TextInput(object sender, ImeSharp.TextInputEventArgs e)
+        private static void InputMethod_TextInput(object sender, ImeSharp.IMETextInputEventArgs e)
         {
             CharEntered?.Invoke(null, new CharacterEventArgs(e.Character, 0));
         }
 
-        private static void InputMethod_TextComposition(object sender, ImeSharp.TextCompositionEventArgs e)
+        private static void InputMethod_TextComposition(object sender, ImeSharp.IMETextCompositionEventArgs e)
         {
             comp.text = e.CompositionText.ToString();
             comp.caret = e.CursorPosition;
