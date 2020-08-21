@@ -3,6 +3,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Reflection;
 using System.Threading;
 
 namespace InputFix
@@ -30,6 +31,10 @@ namespace InputFix
             RegCommand(helper);
             HarmonyInstance harmony = HarmonyInstance.Create(ModManifest.UniqueID);
             harmony.PatchAll();
+
+            Type type = AccessTools.TypeByName("Microsoft.Xna.Framework.WindowsGameHost");
+            MethodInfo m_idle = AccessTools.Method(type, "ApplicationIdle");
+            harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ImeSharp.InputMethod), "PumpMessage"));
 
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)

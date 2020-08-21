@@ -1,6 +1,7 @@
 [submodule "ImeSharp"]
 	path = ImeSharp
 	url = https://github.com/ryancheung/ImeSharp.git
+	branch = master
 [submodule "bsdiff.net"]
 	path = bsdiff.net
 	url = https://github.com/LogosBible/bsdiff.net.git
