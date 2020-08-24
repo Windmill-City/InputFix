@@ -16,7 +16,7 @@ namespace InputFix
             Type CCTB = AccessTools.TypeByName("ChatCommands.ClassReplacements.CommandChatTextBox");
             if (CCTB != null)
             {
-                monitor.Log("Patching CommandChatTextBox", LogLevel.Info);
+                ModEntry.notifyHelper.NotifyMonitor("Patching CommandChatTextBox");
                 MethodInfo m_draw2 = AccessTools.Method(CCTB, "Draw");
                 harmony.Patch(m_draw2, new HarmonyMethod(typeof(Compatibility), "DrawBegin"),
                     new HarmonyMethod(typeof(Compatibility), "DrawEnd"));
@@ -31,7 +31,7 @@ namespace InputFix
             }
             else
             {
-                monitor.Log("CommandChatTextBox NOT FOUND", LogLevel.Error);
+                ModEntry.notifyHelper.NotifyMonitor("CommandChatTextBox NOT FOUND", LogLevel.Error);
             }
         }
 

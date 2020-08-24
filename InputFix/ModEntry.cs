@@ -13,6 +13,7 @@ namespace InputFix
     {
         public static IMonitor monitor;
         public static IModHelper _helper;
+        public static NotifyHelper notifyHelper;
         private static int mainThreadId;
         /*********
         ** Public methods
@@ -24,6 +25,7 @@ namespace InputFix
         {
             monitor = Monitor;
             _helper = helper;
+            notifyHelper = new NotifyHelper(monitor, _helper);
             mainThreadId = Thread.CurrentThread.ManagedThreadId;
 
             KeyboardInput_.Initialize(Game1.game1.Window);
@@ -39,7 +41,7 @@ namespace InputFix
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
             {
-                monitor.Log("Compatible with ChatCommands", LogLevel.Info);
+                notifyHelper.NotifyMonitor("Compatible with ChatCommands");
                 Compatibility.PatchChatCommands(monitor, harmony);
             }
         }

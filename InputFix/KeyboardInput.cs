@@ -3,10 +3,12 @@ using ImeSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace InputFix
 {
@@ -62,11 +64,22 @@ namespace InputFix
             //set Wnd long before Init IME
             SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
-            //Init IME
-            iMEControl = ImeSharp.ImeSharp.GetDefaultControl();
-            iMEControl.Initialize(window.Handle);
-            iMEControl.GetCompExtEvent += IMEControl_GetCompExtEvent;
-            iMEControl.CompositionEvent += IMEControl_CompositionEvent;
+            if (Thread.CurrentThread.ApartmentState == ApartmentState.STA)
+            {
+                //Init IME
+                iMEControl = ImeSharp.ImeSharp.GetDefaultControl();
+                //iMEControl = ImeSharp.ImeSharp.Get_IMM32Control();
+                iMEControl.Initialize(window.Handle);
+                iMEControl.GetCompExtEvent += IMEControl_GetCompExtEvent;
+                iMEControl.CompositionEvent += IMEControl_CompositionEvent;
+            }
+            else
+            {
+                ModEntry.notifyHelper.Notify("WarnMTA", NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
+                ModEntry.notifyHelper.Notify("WarnUseSTALauncher", NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
+                ModEntry.notifyHelper.Notify("WarnMTA", NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
+                ModEntry.notifyHelper.Notify("WarnUseSTALauncher", NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
+            }
 
             prevWndProc = (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("prevWndProc").GetValue();
 

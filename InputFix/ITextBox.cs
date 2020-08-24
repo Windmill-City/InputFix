@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace InputFix
+﻿namespace InputFix
 {
     /// <summary>
     /// The ITextBox interface can be use on LINUX and Windows, which enables TextBox's caret move and text insert
