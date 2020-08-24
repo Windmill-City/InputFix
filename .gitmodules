@@ -5,3 +5,6 @@
 [submodule "bsdiff.net"]
 	path = bsdiff.net
 	url = https://github.com/LogosBible/bsdiff.net.git
+[submodule "bsdiff"]
+	path = bsdiff.net
+	url = https://github.com/LogosBible/bsdiff.net.git
