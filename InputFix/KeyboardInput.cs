@@ -64,7 +64,7 @@ namespace InputFix
             //set Wnd long before Init IME
             SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
-            if (Thread.CurrentThread.ApartmentState == ApartmentState.STA)
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
             {
                 //Init IME
                 iMEControl = ImeSharp.ImeSharp.GetDefaultControl();

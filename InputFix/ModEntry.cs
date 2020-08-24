@@ -36,7 +36,7 @@ namespace InputFix
 
             Type type = AccessTools.TypeByName("Microsoft.Xna.Framework.WindowsGameHost");
             MethodInfo m_idle = AccessTools.Method(type, "ApplicationIdle");
-            //harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ImeSharp.InputMethod), "PumpMessage"));
+            harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ModEntry), "PumpMessage"));
 
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
@@ -44,6 +44,11 @@ namespace InputFix
                 notifyHelper.NotifyMonitor("Compatible with ChatCommands");
                 Compatibility.PatchChatCommands(monitor, harmony);
             }
+        }
+
+        private static void PumpMessage()
+        {
+            ImeSharp.ImeSharp.PumpMsg(KeyboardInput_.iMEControl);
         }
 
         public static bool isMainThread()
