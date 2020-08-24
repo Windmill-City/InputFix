@@ -34,7 +34,7 @@ namespace InputFix
 
             Type type = AccessTools.TypeByName("Microsoft.Xna.Framework.WindowsGameHost");
             MethodInfo m_idle = AccessTools.Method(type, "ApplicationIdle");
-            harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ImeSharp.InputMethod), "PumpMessage"));
+            //harmony.Patch(m_idle, null, new HarmonyMethod(typeof(ImeSharp.InputMethod), "PumpMessage"));
 
             //compatible with ChatCommands
             if (Helper.ModRegistry.Get("cat.chatcommands") != null)
