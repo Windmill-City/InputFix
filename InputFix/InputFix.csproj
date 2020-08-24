@@ -73,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImeSharp\ImeSharp\ImeSharp.csproj">
-      <Project>{974e877e-4b65-44ad-bebc-3b821fead516}</Project>
+      <Project>{d07edd77-d3e6-49f7-946d-ad1e560927c0}</Project>
       <Name>ImeSharp</Name>
     </ProjectReference>
   </ItemGroup>
