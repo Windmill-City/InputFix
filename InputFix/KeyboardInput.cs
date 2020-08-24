@@ -59,13 +59,14 @@ namespace InputFix
                 throw new InvalidOperationException("KeyboardInput.Initialize can only be called once!");
             }
             hookProcDelegate = new WndProc(HookProc);
+            //set Wnd long before Init IME
+            SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
+
             //Init IME
             iMEControl = ImeSharp.ImeSharp.GetDefaultControl();
             iMEControl.Initialize(window.Handle);
             iMEControl.GetCompExtEvent += IMEControl_GetCompExtEvent;
             iMEControl.CompositionEvent += IMEControl_CompositionEvent;
-
-            SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
             prevWndProc = (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("prevWndProc").GetValue();
 
