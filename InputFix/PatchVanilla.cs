@@ -22,11 +22,11 @@ namespace InputFix
                 if ((Game1.keyboardDispatcher.Subscriber is ITextBox && (Game1.keyboardDispatcher.Subscriber as ITextBox).AllowIME)
                     || (Game1.keyboardDispatcher.Subscriber is TextBox && !(Game1.keyboardDispatcher.Subscriber as TextBox).numbersOnly))
                 {
-                    ImeSharp.InputMethod.Enabled = true;
+                    KeyboardInput_.iMEControl.EnableIME();
                 }
                 else
                 {
-                    ImeSharp.InputMethod.Enabled = false;
+                    KeyboardInput_.iMEControl.DisableIME();
                 }
         }
     }

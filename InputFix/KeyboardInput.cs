@@ -1,4 +1,5 @@
 ﻿using Harmony;
+using ImeSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,6 +21,8 @@ namespace InputFix
         public static event KeyEventHandler KeyDown;
 
         public static event KeyEventHandler KeyUp;
+
+        public static IIMEControl iMEControl;
 
         #region Dll Import
 
@@ -57,9 +60,10 @@ namespace InputFix
             }
             hookProcDelegate = new WndProc(HookProc);
             //Init IME
-            ImeSharp.InputMethod.Initialize(window.Handle);
-            ImeSharp.InputMethod.TextComposition += InputMethod_TextComposition;
-            ImeSharp.InputMethod.TextInput += InputMethod_TextInput;
+            iMEControl = ImeSharp.ImeSharp.GetDefaultControl();
+            iMEControl.Initialize(window.Handle);
+            iMEControl.GetCompExtEvent += IMEControl_GetCompExtEvent;
+            iMEControl.CompositionEvent += IMEControl_CompositionEvent;
 
             SetWindowLong(window.Handle, GWL_WNDPROC, (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
 
@@ -101,42 +105,58 @@ namespace InputFix
 
         private static Composition comp = new Composition();
 
-        private static void Display_RenderedActiveMenu(object sender, StardewModdingAPI.Events.RenderedActiveMenuEventArgs e)
+        private static void IMEControl_CompositionEvent(CompositionEventArgs comp)
         {
-            comp.Draw(e.SpriteBatch);
+            switch (comp.state)
+            {
+                case CompositionState.StartComposition:
+                case CompositionState.EndComposition:
+                case CompositionState.Composing:
+                    KeyboardInput_.comp.caret = comp.caretPos;
+                    KeyboardInput_.comp.text = comp.strComp;
+                    break;
+
+                case CompositionState.Commit:
+                    foreach (char ch in comp.strCommit)
+                    {
+                        CharEntered?.Invoke(null, new CharacterEventArgs(ch, 0));
+                    }
+                    break;
+
+                default:
+                    break;
+            }
         }
 
-        private static void InputMethod_TextInput(object sender, ImeSharp.IMETextInputEventArgs e)
+        private static void IMEControl_GetCompExtEvent(ref ImeSharp.RECT rect)
         {
-            CharEntered?.Invoke(null, new CharacterEventArgs(e.Character, 0));
-        }
-
-        private static void InputMethod_TextComposition(object sender, ImeSharp.IMETextCompositionEventArgs e)
-        {
-            comp.text = e.CompositionText.ToString();
-            comp.caret = e.CursorPosition;
-
             ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
             TextBox textBox = Game1.keyboardDispatcher.Subscriber as TextBox;
+            if (textBox == null) return;
 
             Vector2 vector2 = textBox.Font.MeasureString(comp.text);
             if (textBox_ != null)
             {
                 Acp acp = textBox_.GetSelection();
-                RECT rECT = textBox_.GetTextExt(new Acp(0, acp.Start));
-                ImeSharp.InputMethod.SetTextInputRect(rECT.right, rECT.top, (int)vector2.X, 32);
+                RECT CompExt = textBox_.GetTextExt(new Acp(0, acp.Start));
+                rect.left = CompExt.right;
+                rect.top = CompExt.top;
             }
             else if (textBox != null)//without ITextBox interface
             {
                 int strLen = textBox is ChatTextBox ? (int)(textBox as ChatTextBox).currentWidth : (int)textBox.Font.MeasureString(textBox.Text).X;
                 int xOffset = textBox.X + strLen + (textBox is ChatTextBox ? 12 : 16);
-                ImeSharp.InputMethod.SetTextInputRect(
-                    //if without textbox, we can only insert at end
-                    xOffset,
-                    textBox.Y + (textBox is ChatTextBox ? 12 : 8),
-                    (int)vector2.X,
-                    32);
+                //if without textbox, we can only insert at end
+                rect.left = xOffset;
+                rect.top = textBox.Y + (textBox is ChatTextBox ? 12 : 8);
             }
+            rect.right = rect.left + (int)vector2.X;
+            rect.bottom = rect.top + 32;
+        }
+
+        private static void Display_RenderedActiveMenu(object sender, StardewModdingAPI.Events.RenderedActiveMenuEventArgs e)
+        {
+            comp.Draw(e.SpriteBatch);
         }
 
         #endregion HandleImeSharpEvent
