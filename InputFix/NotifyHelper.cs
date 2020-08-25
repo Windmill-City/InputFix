@@ -1,7 +1,5 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
-using System.Globalization;
-using System.Resources;
 
 namespace InputFix
 {
@@ -24,22 +22,14 @@ namespace InputFix
         private IModHelper helper;
         private IMonitor monitor;
 
-        public static ResourceManager resxMgr = new ResourceManager("InputFix.Properties.Resources", typeof(ModEntry).Assembly);
-
         public NotifyHelper(IMonitor monitor, IModHelper helper)
         {
             this.monitor = monitor;
             this.helper = helper;
         }
 
-        public void Notify(string resxName, NotifyPlace place, NotifyMoment moment, LogLevel level = LogLevel.Info)
+        public void Notify(string text, NotifyPlace place, NotifyMoment moment, LogLevel level = LogLevel.Info)
         {
-            Notify(resxName, CultureInfo.CurrentUICulture, place, moment, level);
-        }
-
-        public void Notify(string resxName, CultureInfo culture, NotifyPlace place, NotifyMoment moment, LogLevel level = LogLevel.Info)
-        {
-            string text = resxMgr.GetString(resxName, culture);
             switch (moment)
             {
                 case NotifyMoment.Immediate:

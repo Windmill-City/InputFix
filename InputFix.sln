@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtf", "..\ImeSharp\libtf\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputFix", "InputFix\InputFix.csproj", "{BE02D0DB-F425-482B-A97C-A7B7963C803A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STALauncher", "STALauncher\STALauncher.csproj", "{9657BA2A-57F7-459D-835E-C638188F0131}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,14 @@ Global
 		{BE02D0DB-F425-482B-A97C-A7B7963C803A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BE02D0DB-F425-482B-A97C-A7B7963C803A}.Release|x86.ActiveCfg = Release|x86
 		{BE02D0DB-F425-482B-A97C-A7B7963C803A}.Release|x86.Build.0 = Release|x86
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Debug|x86.ActiveCfg = Debug|x86
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Debug|x86.Build.0 = Debug|x86
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Release|x86.ActiveCfg = Release|x86
+		{9657BA2A-57F7-459D-835E-C638188F0131}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

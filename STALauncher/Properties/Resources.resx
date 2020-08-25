@@ -117,10 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="WARN_MTA" xml:space="preserve">
-    <value>当前游戏运行在MTA模式下，输入法已被禁用！！！</value>
+  <data name="C_PAUSE" xml:space="preserve">
+    <value>Press any key to continue...</value>
   </data>
-  <data name="WARN_UseSTALauncher" xml:space="preserve">
-    <value>如果你想要使用输入法，请使用**STALauncher**来启动游戏！！！</value>
+  <data name="FAIL_BOOTSTRAP" xml:space="preserve">
+    <value>Failed to Booststrap SMAPI, due to following error:</value>
+  </data>
+  <data name="FINDED_SMAPI" xml:space="preserve">
+    <value>Found SMAPI at: {0}</value>
+  </data>
+  <data name="WARN_GAMENOTFOUND" xml:space="preserve">
+    <value>Stardew Valley Not Found, please copy this file to the game folder!</value>
+  </data>
+  <data name="WARN_SMAPINOTFOUND" xml:space="preserve">
+    <value>SMAPI Not Found, please Install SMAPI first!</value>
   </data>
 </root>

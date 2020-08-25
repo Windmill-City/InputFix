@@ -1,5 +1,6 @@
 ﻿using Harmony;
 using ImeSharp;
+using InputFix.Properties;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -75,10 +76,10 @@ namespace InputFix
             }
             else
             {
-                ModEntry.notifyHelper.Notify("WarnMTA", NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
-                ModEntry.notifyHelper.Notify("WarnUseSTALauncher", NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
-                ModEntry.notifyHelper.Notify("WarnMTA", NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
-                ModEntry.notifyHelper.Notify("WarnUseSTALauncher", NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
+                ModEntry.notifyHelper.Notify(Resources.WARN_MTA, NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
+                ModEntry.notifyHelper.Notify(Resources.WARN_UseSTALauncher, NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
+                ModEntry.notifyHelper.Notify(Resources.WARN_MTA, NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
+                ModEntry.notifyHelper.Notify(Resources.WARN_UseSTALauncher, NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
             }
 
             prevWndProc = (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("prevWndProc").GetValue();

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace InputFix.Properties {
+namespace STALauncher.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace InputFix.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("InputFix.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("STALauncher.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,20 +61,47 @@ namespace InputFix.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running in MTA Mode, IME wont work!!!.
+        ///   Looks up a localized string similar to Press any key to continue....
         /// </summary>
-        internal static string WARN_MTA {
+        internal static string C_PAUSE {
             get {
-                return ResourceManager.GetString("WARN_MTA", resourceCulture);
+                return ResourceManager.GetString("C_PAUSE", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you want to use IME, please run the game with **STALauncher**!!!.
+        ///   Looks up a localized string similar to Failed to Booststrap SMAPI, due to following error:.
         /// </summary>
-        internal static string WARN_UseSTALauncher {
+        internal static string FAIL_BOOTSTRAP {
             get {
-                return ResourceManager.GetString("WARN_UseSTALauncher", resourceCulture);
+                return ResourceManager.GetString("FAIL_BOOTSTRAP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found SMAPI at: {0}.
+        /// </summary>
+        internal static string FINDED_SMAPI {
+            get {
+                return ResourceManager.GetString("FINDED_SMAPI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stardew Valley Not Found, please copy this file to the game folder!.
+        /// </summary>
+        internal static string WARN_GAMENOTFOUND {
+            get {
+                return ResourceManager.GetString("WARN_GAMENOTFOUND", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SMAPI Not Found, please Install SMAPI first!.
+        /// </summary>
+        internal static string WARN_SMAPINOTFOUND {
+            get {
+                return ResourceManager.GetString("WARN_SMAPINOTFOUND", resourceCulture);
             }
         }
     }
