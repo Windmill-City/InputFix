@@ -127,7 +127,7 @@
     <value>Found SMAPI at: {0}</value>
   </data>
   <data name="WARN_GAMENOTFOUND" xml:space="preserve">
-    <value>Stardew Valley Not Found, please copy this file to the game folder!</value>
+    <value>Stardew Valley Not Found, please copy the launcher to the game folder!</value>
   </data>
   <data name="WARN_SMAPINOTFOUND" xml:space="preserve">
     <value>SMAPI Not Found, please Install SMAPI first!</value>

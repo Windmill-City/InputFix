@@ -127,7 +127,7 @@
     <value>找到 SMAPI 在： {0}</value>
   </data>
   <data name="WARN_GAMENOTFOUND" xml:space="preserve">
-    <value>没有找到Stardew Valley，请将此文件复制到游戏文件夹下!</value>
+    <value>没有找到Stardew Valley，请将启动器复制到游戏文件夹下!</value>
   </data>
   <data name="WARN_SMAPINOTFOUND" xml:space="preserve">
     <value>没有找到SMAPI， 请先安装SMAPI再使用!</value>

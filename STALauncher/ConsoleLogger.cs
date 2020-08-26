@@ -1,15 +1,39 @@
-﻿using STALauncher.Properties;
-using System;
+﻿using System;
+using System.Globalization;
+using System.Resources;
 
 namespace STALauncher
 {
     internal class ConsoleLogger
     {
         private LogLevel maxLevel;
+        private ResourceManager resMgr;
 
         internal ConsoleLogger(LogLevel maxLevel = LogLevel.Trace)
         {
             this.maxLevel = maxLevel;
+            string culture = CultureInfo.CurrentCulture.Name;
+            resMgr = new ResourceManager("STALauncher.Properties.Resources" + "." + culture, GetType().Assembly);
+            try
+            {
+                resMgr.GetString("");// test if res vaild
+            }
+            catch (Exception)
+            {
+                resMgr = new ResourceManager("STALauncher.Properties.Resources", GetType().Assembly);//use default
+            }
+        }
+
+        internal string Trans(string resxPath)
+        {
+            string text = resMgr.GetString(resxPath);
+            if (text == null) text = resxPath;
+            return text;
+        }
+
+        internal void LogTrans(string resxPath, LogLevel level = LogLevel.Info, params string[] args)
+        {
+            Log(Trans(resxPath), level, args);
         }
 
         internal void Log(string text, LogLevel level = LogLevel.Info, params string[] args)
@@ -41,7 +65,7 @@ namespace STALauncher
 
         public void Pause()
         {
-            Console.WriteLine(Resources.C_PAUSE);
+            Console.WriteLine(resMgr.GetString("C_PAUSE"));
             Console.ReadKey();
         }
 

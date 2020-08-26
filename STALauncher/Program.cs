@@ -1,7 +1,7 @@
-﻿using STALauncher.Properties;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Windows.Forms;
 
 namespace STALauncher
 {
@@ -9,14 +9,14 @@ namespace STALauncher
     {
         private const string SMAPIEXE = "StardewModdingAPI.exe";
         private const string SDVEXE = "Stardew Valley.exe";
-        private static ConsoleLogger logger = new ConsoleLogger();
+        public static ConsoleLogger logger = new ConsoleLogger();
 
         [STAThread]
         private static void Main(string[] args)
         {
             if (File.Exists(SMAPIEXE))
             {
-                logger.Log(Resources.FINDED_SMAPI, ConsoleLogger.LogLevel.Info, Path.GetFullPath(SMAPIEXE));
+                logger.LogTrans("FINDED_SMAPI", ConsoleLogger.LogLevel.Info, Path.GetFullPath(SMAPIEXE));
                 IconHelper.SetConsoleIcon(IconHelper.GetIconOf(SMAPIEXE));
                 BootStrapSMAPI(args);
             }
@@ -34,7 +34,7 @@ namespace STALauncher
             }
             catch (Exception e)
             {
-                logger.Log(Resources.FAIL_BOOTSTRAP, ConsoleLogger.LogLevel.Error);
+                logger.LogTrans("FAIL_BOOTSTRAP", ConsoleLogger.LogLevel.Error);
                 logger.Log(e.ToString(), ConsoleLogger.LogLevel.Error);
                 logger.Log(e.StackTrace, ConsoleLogger.LogLevel.Error);
                 logger.Pause();
@@ -43,11 +43,16 @@ namespace STALauncher
 
         private static void Handle_SMAPINotFound()
         {
+            string text;
             if (File.Exists(SDVEXE))
-                logger.Log(Resources.WARN_SMAPINOTFOUND, ConsoleLogger.LogLevel.Warn);
+                text = logger.Trans("WARN_SMAPINOTFOUND");
             else
-                logger.Log(Resources.WARN_GAMENOTFOUND, ConsoleLogger.LogLevel.Warn);
-            logger.Pause();
+                text = logger.Trans("WARN_GAMENOTFOUND");
+            logger.Log(text, ConsoleLogger.LogLevel.Warn);
+            MainWindow window = new MainWindow();
+            window.Notice.Content = text;
+            window.Show(); window.Activate();
+            Application.Run();
         }
     }
 }
