@@ -57,9 +57,12 @@ namespace Patcher
                     return;
                 }
                 string destDict = Path.GetDirectoryName(path);
-                StreamHelper.WriteFile(dest, Path.Combine(destDict, "Stardew Valley_Patched.exe"));
+                string destName = "Stardew Valley_Patched.exe";
+                string finalPath = Path.Combine(destDict, destName);
+                StreamHelper.WriteFile(dest, finalPath);
                 ExtractDlls(destDict);
-                logger.LogTrans("L_Patch_Done");
+                logger.LogTrans("L_Patch_Done", ConsoleLogger.LogLevel.Info, destName);
+                logger.Log(string.Format("\"{0}\"", finalPath));
                 source.Close();
             }
             catch (Exception ex)

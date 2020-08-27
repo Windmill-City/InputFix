@@ -12,7 +12,9 @@
         选择 Stardew Valley.exe
     </sys:String>
     <sys:String x:Key="L_Patch_Done">
-        给 Stardew Valley 打补丁完成！
+        给 Stardew Valley 打补丁完成！请使用 {0} 来启动游戏！\n
+        如果你使用Steam，复制下面的命令到你的：游戏属性->设置启动选项->\n
+        启动选项里面。(包括引号)
     </sys:String>
     <sys:String x:Key="L_Patch_Fail">
         给 Stardew Valley 打补丁失败, 原因详见控制台窗口！
@@ -31,5 +33,8 @@
     </sys:String>
     <sys:String x:Key="L_C_PAUSE">
         按任意键继续....
+    </sys:String>
+    <sys:String x:Key="L_COPY">
+        复制
     </sys:String>
 </ResourceDictionary>

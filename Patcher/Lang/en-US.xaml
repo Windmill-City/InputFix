@@ -12,7 +12,10 @@
         Select the Stardew Valley.exe
     </sys:String>
     <sys:String x:Key="L_Patch_Done">
-        Patch Stardew Valley Done
+        Patch Stardew Valley Done, please use {0} to start the game!\n
+        If you use Steam, you can copy the command following to your:\n
+        LIBRARY->Stardew Valley->Properties->Set Launch Options->\n
+        Launch Options(Include quotes)
     </sys:String>
     <sys:String x:Key="L_Patch_Fail">
         Patch Stardew Valley Failed, see the console for more infomation！
@@ -31,5 +34,8 @@
     </sys:String>
     <sys:String x:Key="L_C_PAUSE">
         Press any key to continue...
+    </sys:String>
+    <sys:String x:Key="L_COPY">
+        Copy
     </sys:String>
 </ResourceDictionary>

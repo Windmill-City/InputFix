@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Patcher
 {
@@ -54,9 +55,12 @@ namespace Patcher
                         return;
                     }
                     string destDict = Path.GetDirectoryName(path);
-                    StreamHelper.WriteFile(dest, Path.Combine(destDict, "Stardew Valley_Patched.exe"));
+                    string destName = "Stardew Valley_Patched.exe";
+                    string finalPath = Path.Combine(destDict, destName);
+                    StreamHelper.WriteFile(dest, finalPath);
                     Program.ExtractDlls(destDict);
-                    Desc.Text = helper.GetString("L_Patch_Done");
+                    Desc.Text = helper.GetString("L_Patch_Done", destName);
+                    Command.Text = string.Format("\"{0}\"", finalPath);
                     source.Close();
                 }
                 catch (Exception ex)
@@ -66,6 +70,11 @@ namespace Patcher
                     Program.logger.Log(ex.StackTrace, ConsoleLogger.LogLevel.Error);
                 }
             }
+        }
+
+        private void Copy_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(Command.Text);
         }
 
         #region Before Patch
