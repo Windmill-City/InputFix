@@ -5,7 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Patcher"
         mc:Ignorable="d"
-        Title="Patcher" Height="450" Width="800">
+        Title="Patcher" Height="300" Width="400" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Lang\en-US.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
+        <Button Content="{DynamicResource L_Patch}"
+                FontSize="26"
+                Margin="0,20,0,0"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                Height="115" Width="320" Click="Patch_Click" />
+        <Label BorderThickness="1" BorderBrush="Gray"
+               Margin="0,0,0,30"
+               VerticalAlignment="Bottom" HorizontalAlignment="Center"
+               Height="75" Width="320">
+            <TextBlock Name="Desc" TextWrapping="Wrap" />
+        </Label>
     </Grid>
 </Window>

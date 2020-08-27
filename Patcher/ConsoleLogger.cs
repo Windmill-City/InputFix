@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace STALauncher
+namespace Patcher
 {
     public class ConsoleLogger
     {
@@ -15,7 +15,7 @@ namespace STALauncher
 
         internal void LogTrans(string resxPath, LogLevel level = LogLevel.Info, params string[] args)
         {
-            Log(helper.GetString(resxPath, args), level);
+            Log(helper.GetString(resxPath), level, args);
         }
 
         internal void Log(string text, LogLevel level = LogLevel.Info, params string[] args)

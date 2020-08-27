@@ -9,14 +9,16 @@ namespace STALauncher
     {
         private const string SMAPIEXE = "StardewModdingAPI.exe";
         private const string SDVEXE = "Stardew Valley.exe";
-        public static ConsoleLogger logger = new ConsoleLogger();
+
+        public static LangHelper helper = new LangHelper();
+        public static ConsoleLogger logger = new ConsoleLogger(helper);
 
         [STAThread]
         private static void Main(string[] args)
         {
             if (File.Exists(SMAPIEXE))
             {
-                logger.LogTrans("FINDED_SMAPI", ConsoleLogger.LogLevel.Info, Path.GetFullPath(SMAPIEXE));
+                logger.LogTrans("L_FINDED_SMAPI", ConsoleLogger.LogLevel.Info, Path.GetFullPath(SMAPIEXE));
                 IconHelper.SetConsoleIcon(IconHelper.GetIconOf(SMAPIEXE));
                 BootStrapSMAPI(args);
             }
@@ -34,7 +36,7 @@ namespace STALauncher
             }
             catch (Exception e)
             {
-                logger.LogTrans("FAIL_BOOTSTRAP", ConsoleLogger.LogLevel.Error);
+                logger.LogTrans("L_FAIL_BOOTSTRAP", ConsoleLogger.LogLevel.Error);
                 logger.Log(e.ToString(), ConsoleLogger.LogLevel.Error);
                 logger.Log(e.StackTrace, ConsoleLogger.LogLevel.Error);
                 logger.Pause();
@@ -45,9 +47,9 @@ namespace STALauncher
         {
             string text;
             if (File.Exists(SDVEXE))
-                text = logger.Trans("WARN_SMAPINOTFOUND");
+                text = helper.GetString("L_WARN_SMAPINOTFOUND");
             else
-                text = logger.Trans("WARN_GAMENOTFOUND");
+                text = helper.GetString("L_WARN_GAMENOTFOUND");
             logger.Log(text, ConsoleLogger.LogLevel.Warn);
             MainWindow window = new MainWindow();
             window.Notice.Content = text;

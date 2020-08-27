@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,31 +13,19 @@ namespace STALauncher
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ResourceDictionary langRd = null;
+        private LangHelper helper;
 
         public MainWindow()
         {
             InitializeComponent();
-            LoadLang();
-        }
-
-        private void LoadLang()
-        {
-            try
-            {
-                langRd = Application.LoadComponent(new Uri(@"Lang\" + CultureInfo.CurrentUICulture.Name + ".xaml", UriKind.Relative)) as ResourceDictionary;
-            }
-            catch (Exception)
-            {
-                langRd = Application.LoadComponent(new Uri(@"Lang\" + "en-US" + ".xaml", UriKind.Relative)) as ResourceDictionary;
-            }
             Resources.MergedDictionaries.Clear();
-            Resources.MergedDictionaries.Add(langRd);
+            helper = Program.helper;
+            Resources.MergedDictionaries.Add(helper.langRd);
         }
 
         private void onMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Desc.Content = langRd["L_" + (sender as Button).Name + "_Desc"];
+            Desc.Content = helper.GetString("L_" + (sender as Button).Name + "_Desc");
         }
 
         private void INSTALL_SMAPI_MouseClick(object sender, RoutedEventArgs e)
@@ -54,14 +41,14 @@ namespace STALauncher
             {
                 try
                 {
-                    path = string.Format("{0}/{1}", path, "STALauncher.exe");
+                    path = Path.Combine(path, "STALauncher.exe");
                     Program.logger.Log("Copying STALauncher to:" + path);
                     File.Copy(GetType().Assembly.Location, path, true);
-                    Desc.Content = langRd["L_INSTALL_STA_Desc_Done"];
+                    Desc.Content = helper.GetString("L_INSTALL_STA_Desc_Done");
                 }
                 catch (Exception ex)
                 {
-                    Desc.Content = langRd["L_INSTALL_STA_Desc_Fail"];
+                    Desc.Content = helper.GetString("L_INSTALL_STA_Desc_Fail");
                     Program.logger.Log(ex.Message, ConsoleLogger.LogLevel.Error);
                     Program.logger.Log(ex.StackTrace, ConsoleLogger.LogLevel.Error);
                 }
@@ -75,14 +62,14 @@ namespace STALauncher
 
         private bool EnsureSDVPath()
         {
-            MessageBoxResult messageBoxResult = MessageBox.Show((string)langRd["L_INSTALL_STA_Desc_NotGamePath"], "Ensure Copy", System.Windows.MessageBoxButton.YesNo);
+            MessageBoxResult messageBoxResult = MessageBox.Show(helper.GetString("L_INSTALL_STA_Desc_NotGamePath"), "Ensure Copy", MessageBoxButton.YesNo);
             return messageBoxResult == MessageBoxResult.Yes;
         }
 
         private string SelectPath()
         {
             System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            openFileDialog.Title = (string)langRd["L_INSTALL_STA_Desc"];
+            openFileDialog.Title = helper.GetString("L_INSTALL_STA_Desc");
             openFileDialog.InitialDirectory = FindSDVPath();
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {

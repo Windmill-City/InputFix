@@ -27,4 +27,20 @@
     <sys:String x:Key="L_INSTALL_SMAPI_Desc">
         从 smapi.io 下载 SMAPI, 点击打开链接
     </sys:String>
+    <!--Other-->
+    <sys:String x:Key="L_FAILBOOTSTRAP">
+        无法启动SMAPI，原因：
+    </sys:String>
+    <sys:String x:Key="L_FINDED_SMAPI">
+        找到 SMAPI 在： {0}
+    </sys:String>
+    <sys:String x:Key="L_WARN_GAMENOTFOUND">
+        没有找到Stardew Valley，请将启动器复制到游戏文件夹下!
+    </sys:String>
+    <sys:String x:Key="L_WARN_SMAPINOTFOUND">
+        没有找到SMAPI， 请先安装SMAPI再使用!
+    </sys:String>
+    <sys:String x:Key="L_C_PAUSE">
+        按任意键继续....
+    </sys:String>
 </ResourceDictionary>

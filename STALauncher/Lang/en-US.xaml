@@ -2,11 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:STALauncher"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <!--STA-->
     <sys:String x:Key="L_INSTALL_STA">
         Install STALauncher
-    </sys:String>
-    <sys:String x:Key="L_INSTALL_SMAPI">
-        Install SMAPI
     </sys:String>
     <sys:String x:Key="L_INSTALL_STA_Desc">
         Select your game path, will copy the lanucher to the path
@@ -21,7 +19,27 @@
     <sys:String x:Key="L_INSTALL_STA_Desc_Fail">
         Fail to copy the file to the path, maybe you need to copy manually
     </sys:String>
+    <!--SMAPI-->
+    <sys:String x:Key="L_INSTALL_SMAPI">
+        Install SMAPI
+    </sys:String>
     <sys:String x:Key="L_INSTALL_SMAPI_Desc">
         Download from smapi.io, click to open the link
+    </sys:String>
+    <!--Other-->
+    <sys:String x:Key="L_FAILBOOTSTRAP">
+        Failed to Booststrap SMAPI, due to following error:
+    </sys:String>
+    <sys:String x:Key="L_FINDED_SMAPI">
+        Found SMAPI at: {0}
+    </sys:String>
+    <sys:String x:Key="L_WARN_GAMENOTFOUND">
+        Stardew Valley Not Found, please copy the launcher to the game folder!
+    </sys:String>
+    <sys:String x:Key="L_WARN_SMAPINOTFOUND">
+        SMAPI Not Found, please Install SMAPI first!
+    </sys:String>
+    <sys:String x:Key="L_C_PAUSE">
+        Press any key to continue...
     </sys:String>
 </ResourceDictionary>
