@@ -19,6 +19,8 @@ namespace STALauncher
             if (File.Exists(SMAPIEXE))
             {
                 logger.LogTrans("L_FINDED_SMAPI", ConsoleLogger.LogLevel.Info, Path.GetFullPath(SMAPIEXE));
+                logger.LogTrans("\"L_WARN_STALAUNCHER_PATH\"", ConsoleLogger.LogLevel.Warn);
+                logger.Log(typeof(Program).Assembly.Location);
                 IconHelper.SetConsoleIcon(IconHelper.GetIconOf(SMAPIEXE));
                 BootStrapSMAPI(args);
             }

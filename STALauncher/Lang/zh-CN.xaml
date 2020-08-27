@@ -34,6 +34,10 @@
     <sys:String x:Key="L_FINDED_SMAPI">
         找到 SMAPI 在： {0}
     </sys:String>
+    <sys:String x:Key="L_WARN_STALAUNCHER_PATH">
+        如果你使用Steam，复制下面的命令到你的：游戏属性->设置启动选项->\n
+        启动选项里面。(包括引号)
+    </sys:String>
     <sys:String x:Key="L_WARN_GAMENOTFOUND">
         没有找到Stardew Valley，请将启动器复制到游戏文件夹下!
     </sys:String>

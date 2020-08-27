@@ -33,6 +33,11 @@
     <sys:String x:Key="L_FINDED_SMAPI">
         Found SMAPI at: {0}
     </sys:String>
+    <sys:String x:Key="L_WARN_STALAUNCHER_PATH">
+        If you use Steam, you can copy the command following to your:\n
+        LIBRARY->Stardew Valley->Properties->Set Launch Options->\n
+        Launch Options(Include quotes)
+    </sys:String>
     <sys:String x:Key="L_WARN_GAMENOTFOUND">
         Stardew Valley Not Found, please copy the launcher to the game folder!
     </sys:String>
