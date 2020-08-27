@@ -62,7 +62,7 @@ namespace Patcher
                 StreamHelper.WriteFile(dest, finalPath);
                 ExtractDlls(destDict);
                 logger.LogTrans("L_Patch_Done", ConsoleLogger.LogLevel.Info, destName);
-                logger.Log(string.Format("\"{0}\"", finalPath));
+                logger.Log(string.Format("\"{0}\" %command%", finalPath), ConsoleLogger.LogLevel.Warn);
                 source.Close();
             }
             catch (Exception ex)
