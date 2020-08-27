@@ -7,7 +7,7 @@
         Install STALauncher
     </sys:String>
     <sys:String x:Key="L_INSTALL_STA_Desc">
-        Select your game path, will copy the lanucher to the path
+        Select your game path, will copy the lanucher to the path\n
         *Notice: the path where Stardew Valley.exe inside
     </sys:String>
     <sys:String x:Key="L_INSTALL_STA_Desc_NotGamePath">

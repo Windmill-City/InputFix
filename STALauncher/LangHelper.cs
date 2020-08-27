@@ -16,7 +16,7 @@ namespace STALauncher
         public string GetString(string key, params string[] args)
         {
             string result = (string)langRd[key];
-            return result == null ? key : string.Format(result, args);
+            return result == null ? key : string.Format(result.Replace("\\n", "\n"), args);
         }
 
         private void LoadLang()

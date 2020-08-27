@@ -8,7 +8,7 @@
         安装 STALauncher
     </sys:String>
     <sys:String x:Key="L_INSTALL_STA_Desc">
-        选择游戏文件夹，将会把STALauncher复制到里面
+        选择游戏文件夹，将会把STALauncher复制到里面\n
         *注意：是有 Stardew Valley.exe 的目录
     </sys:String>
     <sys:String x:Key="L_INSTALL_STA_Desc_NotGamePath">
