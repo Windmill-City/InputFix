@@ -52,6 +52,7 @@ namespace STALauncher
                 text = helper.GetString("L_WARN_GAMENOTFOUND");
             logger.Log(text, ConsoleLogger.LogLevel.Warn);
             MainWindow window = new MainWindow();
+            window.Closed += new EventHandler((sender, e) => { Application.Exit(); });
             window.Notice.Content = text;
             window.Show(); window.Activate();
             Application.Run();

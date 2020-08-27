@@ -118,6 +118,7 @@ namespace Patcher
         private static void Handle_SDVNotFound()
         {
             MainWindow window = new MainWindow();
+            window.Closed += new EventHandler((sender, e) => { Application.Exit(); });
             window.Show(); window.Activate();
             Application.Run();
         }
