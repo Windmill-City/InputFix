@@ -15,7 +15,7 @@ namespace Patcher
 
         internal void LogTrans(string resxPath, LogLevel level = LogLevel.Info, params string[] args)
         {
-            Log(helper.GetString(resxPath), level, args);
+            Log(helper.GetString(resxPath, args), level);
         }
 
         internal void Log(string text, LogLevel level = LogLevel.Info, params string[] args)
