@@ -20,7 +20,7 @@ Unzip, and copy the boost path to `PropertySheet.props`
 1. Download the Patcher, and Run it
 2. Use Patched version to run the game
 # 安装
-### 百度贴吧(有问题发到这里)
+### 百度贴吧(有问题发到贴吧)
 https://tieba.baidu.com/p/6595849613
 ## Mod版本（SMAPI）
 1. 将压缩包里的InputFix文件夹复制到Mods里面
