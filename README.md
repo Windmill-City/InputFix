@@ -30,3 +30,9 @@ https://tieba.baidu.com/p/6595849613
 2. 用带有_Patched后缀的来启动游戏
 # Download
 https://www.nexusmods.com/stardewvalley/mods/5693
+# 下载
+https://tieba.baidu.com/p/6595849613
+https://www.nexusmods.com/stardewvalley/mods/5693
+Patcher(原版无SMAPI)：windmillcity.lanzous.com/inIWMg4ap9e
+Mod(需要 SMAPI 和 *STALauncher* )：windmillcity.lanzous.com/iog7vg4apch
+STALauncher：windmillcity.lanzous.com/ivtJ6g4apaf
