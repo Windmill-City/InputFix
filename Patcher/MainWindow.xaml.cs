@@ -20,6 +20,8 @@ namespace Patcher
             Resources.MergedDictionaries.Clear();
             helper = Program.helper;
             Resources.MergedDictionaries.Add(helper.langRd);
+
+            Desc.Text = helper.GetString("L_SelectEXE");
         }
 
         private void Patch_Click(object sender, RoutedEventArgs e)
