@@ -3,6 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <EnableHarmony>true</EnableHarmony>
+	<GamePath>F:\SteamLibrary\steamapps\common\Stardew Valley</GamePath>
   </PropertyGroup>
   <PropertyGroup>
     <ProjectGuid>{BE02D0DB-F425-482B-A97C-A7B7963C803A}</ProjectGuid>
