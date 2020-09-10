@@ -125,7 +125,7 @@ namespace Patcher
 
         public static void CreateSDVPatch()
         {
-            string path = @"E:\source\repos\InputFix\Patcher\DataSources";
+            string path = @"E:\Codes\source\repos\InputFix\Patcher\DataSources";
             string PATCHED = "Stardew Valley_Fixed.exe";
 
             patchData = new PatchData(Path.Combine(path, SDVEXE),
