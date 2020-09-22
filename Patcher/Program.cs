@@ -84,7 +84,7 @@ namespace Patcher
 
         private static void WriteDll(byte[] dlldata, string path)
         {
-            var file = new FileStream(path, FileMode.OpenOrCreate | FileMode.Truncate, FileAccess.ReadWrite);
+            var file = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
             file.Write(dlldata, 0, dlldata.Length);
             file.Flush();
             file.Close();
