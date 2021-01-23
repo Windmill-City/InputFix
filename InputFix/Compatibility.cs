@@ -10,7 +10,6 @@ namespace InputFix
     {
         public static bool ignore;
         private static Composition comp;
-
         public static void PatchChatCommands(IMonitor monitor, HarmonyInstance harmony)
         {
             Type CCTB = AccessTools.TypeByName("ChatCommands.ClassReplacements.CommandChatTextBox");
@@ -35,10 +34,7 @@ namespace InputFix
             }
         }
 
-        private static void DrawBegin()
-        {
-            ignore = true;
-        }
+        private static void DrawBegin() => ignore = true;
 
         private static void DrawEnd(SpriteBatch spriteBatch)
         {
@@ -46,7 +42,7 @@ namespace InputFix
             comp.Draw(spriteBatch);
         }
 
-        public static bool CommandChatTextBoxOnArrow()
+        private static bool CommandChatTextBoxOnArrow()
         {
             return comp.text.Length == 0;
         }

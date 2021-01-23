@@ -1,15 +1,12 @@
 ﻿using Harmony;
-using ImeSharp;
-using InputFix.Properties;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
+using IngameIME_Sharp;
 
 namespace InputFix
 {
@@ -25,7 +22,7 @@ namespace InputFix
 
         public static event KeyEventHandler KeyUp;
 
-        public static IIMEControl iMEControl;
+        public static BaseIME_Sharp api;
 
         #region Dll Import
 
@@ -71,22 +68,11 @@ namespace InputFix
 
             ImmReleaseContext(window.Handle, (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("hIMC").GetValue());
 
-            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-            {
-                //Init IME
-                iMEControl = ImeSharp.ImeSharp.GetDefaultControl();
-                //iMEControl = ImeSharp.ImeSharp.Get_IMM32Control();
-                iMEControl.Initialize(window.Handle);
-                iMEControl.GetCompExtEvent += IMEControl_GetCompExtEvent;
-                iMEControl.CompositionEvent += IMEControl_CompositionEvent;
-            }
-            else
-            {
-                ModEntry.notifyHelper.Notify(Resources.WARN_MTA, NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
-                ModEntry.notifyHelper.Notify(Resources.WARN_UseSTALauncher, NotifyPlace.Monitor, NotifyMoment.GameLaunched, LogLevel.Warn);
-                ModEntry.notifyHelper.Notify(Resources.WARN_MTA, NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
-                ModEntry.notifyHelper.Notify(Resources.WARN_UseSTALauncher, NotifyPlace.GameHUD, NotifyMoment.SaveLoaded);
-            }
+            api = new IMM();
+            api.Initialize(window.Handle);
+            //Composition
+            api.m_compositionHandler.eventComposition += IMEControl_CompositionEvent;
+            api.m_compositionHandler.eventGetTextExt += IMEControl_GetCompExtEvent;
 
             prevWndProc = (IntPtr)Traverse.Create(typeof(KeyboardInput)).Field("prevWndProc").GetValue();
 
@@ -126,19 +112,19 @@ namespace InputFix
 
         private static Composition comp = new Composition();
 
-        private static void IMEControl_CompositionEvent(CompositionEventArgs comp)
+        private static void IMEControl_CompositionEvent(refCompositionEventArgs comp)
         {
-            switch (comp.state)
+            switch (comp.m_state)
             {
-                case CompositionState.StartComposition:
-                case CompositionState.EndComposition:
-                case CompositionState.Composing:
-                    KeyboardInput_.comp.caret = comp.caretPos;
-                    KeyboardInput_.comp.text = comp.strComp;
+                case refCompositionState.StartComposition:
+                case refCompositionState.EndComposition:
+                case refCompositionState.Composing:
+                    KeyboardInput_.comp.caret = comp.m_lCaretPos;
+                    KeyboardInput_.comp.text = comp.m_strComposition;
                     break;
 
-                case CompositionState.Commit:
-                    foreach (char ch in comp.strCommit)
+                case refCompositionState.Commit:
+                    foreach (char ch in comp.m_strCommit)
                     {
                         CharEntered?.Invoke(null, new CharacterEventArgs(ch, 0));
                     }
@@ -149,7 +135,7 @@ namespace InputFix
             }
         }
 
-        private static void IMEControl_GetCompExtEvent(ref ImeSharp.RECT rect)
+        private static void IMEControl_GetCompExtEvent(refRECT rect)
         {
             ITextBox textBox_ = Game1.keyboardDispatcher.Subscriber as ITextBox;
             TextBox textBox = Game1.keyboardDispatcher.Subscriber as TextBox;
