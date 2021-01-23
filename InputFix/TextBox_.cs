@@ -167,7 +167,7 @@ namespace InputFix
                 text.Remove(start, Math.Abs(acp.Start - acp.End));
                 acp.Start = acp.End = start;
             }
-            if (_text != "" && (textLimit == -1 || text.Length + _text.Length < textLimit) && (Font.MeasureString(_text).X + Font.MeasureString(text).X) < Width - 16)
+            if (_text != "" && (textLimit == -1 || text.Length + _text.Length <= textLimit) && (Font.MeasureString(_text).X + Font.MeasureString(text).X) < Width - 16)
             {
                 text.Insert(acp.Start, _text);
                 acp.End += _text.Length;
