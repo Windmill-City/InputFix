@@ -79,7 +79,6 @@ namespace InputFix
             CharEntered += KeyboardInput__CharEntered;
             KeyDown += KeyboardInput__KeyDown;
 
-            ModEntry._helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             initialized = true;
         }
 
@@ -110,7 +109,7 @@ namespace InputFix
 
         #region HandleImeSharpEvent
 
-        private static Composition comp = new Composition();
+        public static Composition comp = new Composition();
 
         private static void IMEControl_CompositionEvent(refCompositionEventArgs comp)
         {
@@ -159,11 +158,6 @@ namespace InputFix
             }
             rect.right = rect.left + (int)vector2.X;
             rect.bottom = rect.top + 32;
-        }
-
-        private static void Display_RenderedActiveMenu(object sender, StardewModdingAPI.Events.RenderedActiveMenuEventArgs e)
-        {
-            comp.Draw(e.SpriteBatch);
         }
 
         #endregion HandleImeSharpEvent
